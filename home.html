@@ -5,6 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MessApp - Home</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- OneSignal Web Push SDK -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "6cb9c042-5204-457a-aa8f-b8815d009ca5",
+      });
+    });
+  </script>
+
   <style>
     :root {
       --bg-color: #111b21;
@@ -146,6 +158,12 @@
     if (user) {
       currentUser = user;
       localStorage.setItem('messapp_current_uid', user.uid);
+      
+      // User External ID set for OneSignal targeted push notifications
+      window.OneSignalDeferred.push(function(OneSignal) {
+        OneSignal.login(user.uid);
+      });
+
       loadAllUsersData();
       listenForNotifications();
     } else {
@@ -297,7 +315,6 @@
         const notif = child.val();
         if (!notif.read) {
           hasUnread = true;
-          // Trigger System Push Notification
           if (localStorage.getItem('messapp_muted') !== 'true' && notif.timestamp > (Date.now() - 5000)) {
             triggerSystemNotification(notif);
           }
