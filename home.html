@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MessApp - Home</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-color: #111b21;
+      --card-bg: #202c33;
+      --text-color: #e9edef;
+      --subtext-color: #8696a0;
+      --border-color: #222d34;
+      --accent-color: #00a884;
+      --hover-bg: #1f2c34;
+    }
+
+    [data-theme="light"] {
+      --bg-color: #ffffff;
+      --card-bg: #f0f2f5;
+      --text-color: #111b21;
+      --subtext-color: #667781;
+      --border-color: #e9edef;
+      --accent-color: #008069;
+      --hover-bg: #f5f6f6;
+    }
+
+    * { box-sizing: border-box; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; margin: 0; padding: 0; transition: background 0.2s, color 0.2s; }
+    body { background-color: var(--bg-color); color: var(--text-color); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    header { background: var(--card-bg); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
+    .app-brand { font-size: 22px; font-weight: 800; color: var(--accent-color); letter-spacing: 0.5px; }
+
+    .header-actions { display: flex; align-items: center; gap: 14px; }
+    .icon-btn { background: transparent; border: none; color: var(--subtext-color); font-size: 18px; cursor: pointer; padding: 6px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; }
+    .icon-btn:hover { background: rgba(255,255,255,0.08); color: var(--text-color); }
+
+    .tabs-bar { display: flex; background: var(--card-bg); border-bottom: 1px solid var(--border-color); }
+    .tab-item { flex: 1; text-align: center; padding: 14px 0; font-size: 15px; font-weight: 600; color: var(--subtext-color); cursor: pointer; border-bottom: 3px solid transparent; position: relative; }
+    .tab-item.active { color: var(--accent-color); border-bottom-color: var(--accent-color); }
+
+    .main-container { flex: 1; overflow-y: auto; background: var(--bg-color); }
+    
+    .list-view { display: none; }
+    .list-view.active { display: block; }
+
+    .user-card { display: flex; align-items: center; padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border-color); position: relative; }
+    .user-card:hover { background: var(--hover-bg); }
+    
+    .avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--accent-color); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; text-transform: uppercase; flex-shrink: 0; }
+    
+    .user-details { margin-left: 14px; flex: 1; overflow: hidden; }
+    .user-details .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .user-details .name { font-weight: 700; font-size: 16px; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-details .time { font-size: 12px; color: var(--subtext-color); }
+    .user-details .last-msg { font-size: 13px; color: var(--subtext-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .badge { background: var(--accent-color); color: white; border-radius: 10px; padding: 2px 7px; font-size: 11px; font-weight: bold; margin-left: 6px; }
+    .notif-badge { position: absolute; top: 2px; right: 2px; background: #f44336; color: white; border-radius: 50%; width: 10px; height: 10px; display: none; }
+
+    .offline-banner { background: #e53935; color: white; font-size: 12px; text-align: center; padding: 4px; display: none; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<div class="offline-banner" id="offlineBanner"><i class="fa-solid fa-wifi"></i> Offline Mode - Showing cached data</div>
+
+<header>
+  <div class="app-brand">MessApp</div>
+  <div class="header-actions">
+    <button class="icon-btn" onclick="location.href='notification.html'" title="Notifications">
+      <i class="fa-solid fa-bell"></i>
+      <span class="notif-badge" id="globalNotifBadge"></span>
+    </button>
+    <button class="icon-btn" onclick="location.href='search.html'" title="Search Users">
+      <i class="fa-solid fa-magnifying-glass"></i>
+    </button>
+    <button class="icon-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
+      <i class="fa-solid fa-moon"></i>
+    </button>
+    <button class="icon-btn" id="logoutBtn" title="Logout">
+      <i class="fa-solid fa-right-from-bracket"></i>
+    </button>
+  </div>
+</header>
+
+<div class="tabs-bar">
+  <div class="tab-item active" id="tabChats" onclick="switchTab('chats')">CHATS</div>
+  <div class="tab-item" id="tabAll" onclick="switchTab('all')">ALL USERS</div>
+</div>
+
+<div class="main-container">
+  <div class="list-view active" id="chatsView">
+    <div style="text-align: center; padding: 40px 20px; color: var(--subtext-color);" id="chatsLoader">
+      <i class="fa-solid fa-circle-notch fa-spin"></i> Loading recent chats...
+    </div>
+  </div>
+
+  <div class="list-view" id="allUsersView">
+    <div style="text-align: center; padding: 40px 20px; color: var(--subtext-color);" id="allLoader">
+      <i class="fa-solid fa-circle-notch fa-spin"></i> Loading all contacts...
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyD68Gmuz3JmwC570rX4h0ShxMe2O8QYLug",
+    authDomain: "exemplary-proxy-423103-s4.firebaseapp.com",
+    databaseURL: "https://exemplary-proxy-423103-s4-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "exemplary-proxy-423103-s4",
+    storageBucket: "exemplary-proxy-423103-s4.firebasestorage.app",
+    messagingSenderId: "454413347434",
+    appId: "1:454413347434:web:d68e8ecf337a333418b813"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
+
+  let currentUser = null;
+  let allUsersMap = {};
+
+  initTheme();
+  requestNotificationPermission();
+
+  window.addEventListener('online', updateOnlineStatus);
+  window.addEventListener('offline', updateOnlineStatus);
+
+  function updateOnlineStatus() {
+    document.getElementById('offlineBanner').style.display = navigator.onLine ? 'none' : 'block';
+  }
+
+  function requestNotificationPermission() {
+    if ("Notification" in window && Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
+  }
+
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      currentUser = user;
+      localStorage.setItem('messapp_current_uid', user.uid);
+      loadAllUsersData();
+      listenForNotifications();
+    } else {
+      localStorage.removeItem('messapp_current_uid');
+      window.location.href = 'login.html';
+    }
+  });
+
+  function switchTab(tabName) {
+    document.getElementById('tabChats').classList.toggle('active', tabName === 'chats');
+    document.getElementById('tabAll').classList.toggle('active', tabName === 'all');
+    document.getElementById('chatsView').classList.toggle('active', tabName === 'chats');
+    document.getElementById('allUsersView').classList.toggle('active', tabName === 'all');
+  }
+
+  function loadAllUsersData() {
+    const cachedUsers = localStorage.getItem('messapp_cached_users');
+    if (cachedUsers) {
+      allUsersMap = JSON.parse(cachedUsers);
+      renderAllUsersList();
+      loadRecentChats();
+    }
+
+    if (navigator.onLine) {
+      db.ref('users').on('value', snapshot => {
+        allUsersMap = {};
+        snapshot.forEach(child => {
+          const u = child.val();
+          allUsersMap[u.uid] = u;
+        });
+        localStorage.setItem('messapp_cached_users', JSON.stringify(allUsersMap));
+        renderAllUsersList();
+        loadRecentChats();
+      });
+    }
+  }
+
+  function renderAllUsersList() {
+    const container = document.getElementById('allUsersView');
+    container.innerHTML = '';
+    const userList = Object.values(allUsersMap).filter(u => u.uid !== currentUser.uid);
+
+    if (userList.length === 0) {
+      container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--subtext-color);">Koi user nahi mila</div>`;
+      return;
+    }
+
+    userList.forEach(user => {
+      const card = document.createElement('div');
+      card.className = 'user-card';
+      card.onclick = () => openChatPage(user);
+      card.innerHTML = `
+        <div class="avatar">${user.fullName ? user.fullName.charAt(0) : 'U'}</div>
+        <div class="user-details">
+          <div class="top-row">
+            <div class="name">${user.fullName}</div>
+          </div>
+          <div class="last-msg">@${user.username || 'user'} • MessApp</div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function loadRecentChats() {
+    db.ref('chats').on('value', snapshot => {
+      const recentChatUsers = [];
+
+      snapshot.forEach(roomSnap => {
+        const roomId = roomSnap.key;
+        if (roomId.includes(currentUser.uid)) {
+          const uids = roomId.split('_');
+          const partnerUid = uids[0] === currentUser.uid ? uids[1] : uids[0];
+
+          let lastMsg = "";
+          let lastTime = 0;
+          let unreadCount = 0;
+
+          roomSnap.forEach(msgSnap => {
+            const msg = msgSnap.val();
+            if (msg.timestamp > lastTime) {
+              lastTime = msg.timestamp;
+              lastMsg = msg.text;
+            }
+            if (msg.sender !== currentUser.uid && !msg.read) {
+              unreadCount++;
+            }
+          });
+
+          if (allUsersMap[partnerUid]) {
+            recentChatUsers.push({
+              user: allUsersMap[partnerUid],
+              lastMsg: lastMsg,
+              timestamp: lastTime,
+              unreadCount: unreadCount
+            });
+          }
+        }
+      });
+
+      recentChatUsers.sort((a, b) => b.timestamp - a.timestamp);
+      renderRecentChatsUI(recentChatUsers);
+    });
+  }
+
+  function renderRecentChatsUI(recentList) {
+    const container = document.getElementById('chatsView');
+    container.innerHTML = '';
+
+    if (recentList.length === 0) {
+      container.innerHTML = `
+        <div style="text-align:center; padding:50px 20px; color:var(--subtext-color);">
+          <i class="fa-regular fa-comments" style="font-size:40px; margin-bottom:12px;"></i><br>
+          Koi purani chat nahi hai.<br>
+          <span style="color:var(--accent-color); cursor:pointer;" onclick="switchTab('all')">All Users</span> me se select karke chat shuru karein.
+        </div>`;
+      return;
+    }
+
+    recentList.forEach(item => {
+      const user = item.user;
+      const card = document.createElement('div');
+      card.className = 'user-card';
+      card.onclick = () => openChatPage(user);
+
+      const formattedTime = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+      card.innerHTML = `
+        <div class="avatar">${user.fullName ? user.fullName.charAt(0) : 'U'}</div>
+        <div class="user-details">
+          <div class="top-row">
+            <div class="name">${user.fullName}</div>
+            <div class="time">${formattedTime}</div>
+          </div>
+          <div class="last-msg" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>${item.lastMsg || 'Tap to chat'}</span>
+            ${item.unreadCount > 0 ? `<span class="badge">${item.unreadCount}</span>` : ''}
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function listenForNotifications() {
+    db.ref(`notifications/${currentUser.uid}`).on('value', snapshot => {
+      let hasUnread = false;
+      snapshot.forEach(child => {
+        const notif = child.val();
+        if (!notif.read) {
+          hasUnread = true;
+          // Trigger System Push Notification
+          if (localStorage.getItem('messapp_muted') !== 'true' && notif.timestamp > (Date.now() - 5000)) {
+            triggerSystemNotification(notif);
+          }
+        }
+      });
+      document.getElementById('globalNotifBadge').style.display = hasUnread ? 'block' : 'none';
+    });
+  }
+
+  function triggerSystemNotification(notif) {
+    if ("Notification" in window && Notification.permission === "granted") {
+      const sysNotif = new Notification(`${notif.senderName} ne message kiya`, {
+        body: notif.text,
+        icon: 'https://cdn-icons-png.flaticon.com/512/732/732200.png'
+      });
+      sysNotif.onclick = () => {
+        window.focus();
+        location.href = 'notification.html';
+      };
+    }
+  }
+
+  function openChatPage(targetUser) {
+    localStorage.setItem('messapp_active_target', JSON.stringify(targetUser));
+    window.location.href = `chat.html?uid=${targetUser.uid}`;
+  }
+
+  function initTheme() {
+    const savedTheme = localStorage.getItem('messapp_theme');
+    const themeBtn = document.getElementById('themeToggleBtn');
+
+    if (savedTheme) {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      themeBtn.innerHTML = savedTheme === 'light' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+    }
+  }
+
+  function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('messapp_theme', newTheme);
+    document.getElementById('themeToggleBtn').innerHTML = newTheme === 'light' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+  }
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    auth.signOut().then(() => {
+      localStorage.clear();
+      window.location.href = 'login.html';
+    });
+  });
+</script>
+</body>
+</html>

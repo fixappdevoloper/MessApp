@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MessApp - Welcome</title>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-color: #0f172a;
+      --subtext-color: #64748b;
+      --accent-color: #008069;
+      --accent-gradient: linear-gradient(135deg, #00a884, #008069);
+    }
+
+    /* System Light Theme Alignment */
+    [data-theme="dark"] {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-color: #f8fafc;
+      --subtext-color: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      overflow: hidden;
+      padding: 40px 20px;
+      transition: opacity 0.5s ease-out;
+    }
+
+    /* Fade-out effect before redirecting */
+    body.fade-out {
+      opacity: 0;
+    }
+
+    /* Main Branding Container */
+    .brand-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    /* Glowing Logo Icon Wrapper */
+    .logo-wrapper {
+      position: relative;
+      width: 90px;
+      height: 90px;
+      background: var(--accent-gradient);
+      border-radius: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 12px 30px rgba(0, 168, 132, 0.25);
+      animation: pulseGlow 2s infinite alternate ease-in-out;
+      margin-bottom: 24px;
+    }
+
+    .logo-wrapper i {
+      font-size: 42px;
+      color: #ffffff;
+    }
+
+    /* Pulse Glow Animation */
+    @keyframes pulseGlow {
+      0% {
+        transform: scale(0.98);
+        box-shadow: 0 8px 20px rgba(0, 168, 132, 0.2);
+      }
+      100% {
+        transform: scale(1.05);
+        box-shadow: 0 16px 36px rgba(0, 168, 132, 0.4);
+      }
+    }
+
+    .app-title {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text-color);
+      margin-bottom: 8px;
+    }
+
+    .app-tagline {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--subtext-color);
+      letter-spacing: 0.2px;
+    }
+
+    /* Footer / Progress Bar Section */
+    .footer-container {
+      width: 100%;
+      max-width: 260px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    /* Premium Progress Bar */
+    .progress-bar-bg {
+      width: 100%;
+      height: 4px;
+      background-color: rgba(0, 0, 0, 0.08);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar-fill {
+      width: 0%;
+      height: 100%;
+      background: var(--accent-gradient);
+      border-radius: 10px;
+      animation: fillProgress 3s linear forwards;
+    }
+
+    @keyframes fillProgress {
+      0% { width: 0%; }
+      100% { width: 100%; }
+    }
+
+    /* Secured Badge */
+    .security-tag {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--subtext-color);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .security-tag i {
+      color: var(--accent-color);
+    }
+
+    /* Direct Redirect Button (Fallback) */
+    .skip-btn {
+      background: transparent;
+      border: none;
+      color: var(--accent-color);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 4px;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- App Branding Section -->
+  <div class="brand-container">
+    <div class="logo-wrapper">
+      <i class="fa-solid fa-comments"></i>
+    </div>
+    <div class="app-title">MessApp</div>
+    <div class="app-tagline">Fast, Secure & Private Messaging</div>
+  </div>
+
+  <!-- Loading Animation & Footer Section -->
+  <div class="footer-container">
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill"></div>
+    </div>
+    <div class="security-tag">
+      <i class="fa-solid fa-shield-halved"></i> End-to-End Encrypted
+    </div>
+    <button class="skip-btn" onclick="redirectToHome()">Open MessApp</button>
+  </div>
+
+  <script>
+    // System Theme Preference Listener (Keep UI consistent)
+    const savedTheme = localStorage.getItem('messapp_theme');
+    if (savedTheme) {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    } else {
+      const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+      if (!prefersLight) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    }
+
+    // Redirect Function
+    function redirectToHome() {
+      document.body.classList.add('fade-out');
+      setTimeout(() => {
+        window.location.replace('home.html');
+      }, 300); // Wait for smooth fade-out effect
+    }
+
+    // Auto Redirect precisely after 3 Seconds (3000ms)
+    setTimeout(() => {
+      redirectToHome();
+    }, 3000);
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MessApp - Premium Registration</title>
+  <!-- Font Awesome Icons for modern UI -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; margin: 0; padding: 0; transition: all 0.3s ease; }
+    body { background: linear-gradient(135deg, #0b141a 0%, #111b21 50%, #1f2c34 100%); color: #e9edef; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; overflow-x: hidden; }
+    
+    /* App Container Card */
+    .app-card { background: rgba(31, 44, 52, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; width: 100%; max-width: 440px; padding: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
+    
+    /* Header & Back Button */
+    .nav-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; }
+    .back-btn { background: rgba(255,255,255,0.05); border: none; color: #00a884; font-size: 16px; padding: 8px 14px; border-radius: 50px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+    .back-btn:hover { background: rgba(0, 168, 132, 0.15); }
+    .app-logo { font-size: 24px; font-weight: 800; color: #00a884; letter-spacing: 0.5px; }
+
+    /* Progress Indicator Bar */
+    .progress-bar-container { display: flex; justify-content: space-between; margin-bottom: 25px; position: relative; }
+    .progress-bar-container::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 3px; background: #2a3942; transform: translateY(-50%); z-index: 1; }
+    .progress-fill { position: absolute; top: 50%; left: 0; height: 3px; background: #00a884; transform: translateY(-50%); z-index: 1; transition: width 0.4s ease; width: 0%; }
+    .step-circle { width: 32px; height: 32px; border-radius: 50%; background: #2a3942; color: #8696a0; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; position: relative; z-index: 2; border: 2px solid #1f2c34; }
+    .step-circle.active { background: #00a884; color: #fff; border-color: #00a884; box-shadow: 0 0 10px rgba(0, 168, 132, 0.5); }
+    .step-circle.completed { background: #00a884; color: #fff; }
+
+    /* Step Views */
+    .step-view { display: none; animation: fadeIn 0.4s ease forwards; }
+    .step-view.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .step-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: #f1f1f1; }
+    .step-desc { font-size: 13px; color: #8696a0; margin-bottom: 20px; }
+
+    /* Inputs & Form Elements */
+    .input-group { position: relative; margin-bottom: 18px; }
+    .input-group i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #8696a0; font-size: 16px; }
+    .input-group input, .input-group select { width: 100%; padding: 14px 14px 14px 42px; border-radius: 12px; border: 1px solid #2a3942; background: #2a3942; color: #fff; font-size: 15px; outline: none; }
+    .input-group input:focus, .input-group select:focus { border-color: #00a884; box-shadow: 0 0 0 2px rgba(0, 168, 132, 0.2); }
+    
+    /* Password Eye Icon */
+    .toggle-password { right: 14px; left: auto !important; cursor: pointer; color: #8696a0; }
+
+    /* Auto Generate Button */
+    .gen-btn { background: rgba(0, 168, 132, 0.15); color: #00a884; border: 1px solid #00a884; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; margin-bottom: 15px; display: inline-flex; align-items: center; gap: 6px; }
+    .gen-btn:hover { background: #00a884; color: #fff; }
+
+    /* Buttons */
+    .btn-main { width: 100%; padding: 14px; background: #00a884; color: #fff; font-size: 16px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; }
+    .btn-main:hover { background: #008f6f; transform: translateY(-1px); }
+    .btn-main:disabled { background: #2a3942; color: #8696a0; cursor: not-allowed; }
+
+    /* Privacy Scroll Box */
+    .privacy-box { height: 140px; background: #111b21; border: 1px solid #2a3942; border-radius: 10px; padding: 12px; overflow-y: auto; font-size: 12px; color: #aebac1; line-height: 1.6; margin-bottom: 15px; }
+    .checkbox-container { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #e9edef; margin-bottom: 15px; cursor: pointer; }
+    .checkbox-container input { width: 18px; height: 18px; accent-color: #00a884; cursor: pointer; }
+
+    .error-msg { color: #f15c6d; font-size: 12px; margin-top: -10px; margin-bottom: 12px; display: none; }
+    .success-msg { color: #00a884; font-size: 12px; margin-top: -10px; margin-bottom: 12px; display: none; }
+
+    /* Fullscreen 3 Sec Animation Overlay */
+    .loading-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0b141a; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+    .spinner { width: 60px; height: 60px; border: 5px solid #2a3942; border-top: 5px solid #00a884; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .loading-title { font-size: 22px; font-weight: bold; color: #00a884; margin-bottom: 8px; }
+    .loading-sub { font-size: 14px; color: #8696a0; }
+
+    .footer-link { text-align: center; margin-top: 20px; font-size: 14px; color: #8696a0; }
+    .footer-link a { color: #00a884; text-decoration: none; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<div class="app-card">
+  <!-- Nav Header -->
+  <div class="nav-header">
+    <button class="back-btn" id="backBtn" onclick="prevStep()"><i class="fa-solid fa-arrow-left"></i> Back</button>
+    <div class="app-logo">MessApp</div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="progress-bar-container">
+    <div class="progress-fill" id="progressFill"></div>
+    <div class="step-circle active" id="circle1">1</div>
+    <div class="step-circle" id="circle2">2</div>
+    <div class="step-circle" id="circle3">3</div>
+    <div class="step-circle" id="circle4">4</div>
+  </div>
+
+  <!-- STEP 1: Full Name -->
+  <div class="step-view active" id="step1">
+    <div class="step-title">Welcome to MessApp!</div>
+    <div class="step-desc">Enter your real full name to begin profile setup.</div>
+    
+    <div class="input-group">
+      <i class="fa-solid fa-user"></i>
+      <input type="text" id="fullName" placeholder="Enter Full Name" autocomplete="off">
+    </div>
+    <div class="error-msg" id="err1">Please enter your full name.</div>
+
+    <button class="btn-main" onclick="nextStep(1)">Continue <i class="fa-solid fa-arrow-right"></i></button>
+    
+    <div class="footer-link">
+      Already have an account? <a href="login.html">Login</a>
+    </div>
+  </div>
+
+  <!-- STEP 2: Address & Country -->
+  <div class="step-view" id="step2">
+    <div class="step-title">Location Details</div>
+    <div class="step-desc">Help us connect you with people nearby.</div>
+
+    <div class="input-group">
+      <i class="fa-solid fa-house"></i>
+      <input type="text" id="address" placeholder="Address / City">
+    </div>
+
+    <div class="input-group">
+      <i class="fa-solid fa-globe"></i>
+      <select id="country">
+        <option value="">Select Country</option>
+        <option value="India">India</option>
+        <option value="USA">USA</option>
+        <option value="UK">UK</option>
+        <option value="Canada">Canada</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div class="error-msg" id="err2">Please complete address and select country.</div>
+
+    <button class="btn-main" onclick="nextStep(2)">Continue <i class="fa-solid fa-arrow-right"></i></button>
+  </div>
+
+  <!-- STEP 3: Username -->
+  <div class="step-view" id="step3">
+    <div class="step-title">Choose Unique Username</div>
+    <div class="step-desc">Minimum 5 characters long. Spaces auto-convert to "_".</div>
+
+    <button type="button" class="gen-btn" onclick="generateAutoUsername()"><i class="fa-solid fa-wand-magic-sparkles"></i> Auto Generate</button>
+
+    <div class="input-group">
+      <i class="fa-solid fa-at"></i>
+      <input type="text" id="username" placeholder="Username" oninput="handleUsernameInput(this)">
+    </div>
+    <div class="error-msg" id="err3">Username error</div>
+    <div class="success-msg" id="succ3">Username is available!</div>
+
+    <button class="btn-main" id="btnStep3" onclick="nextStep(3)">Continue to Next <i class="fa-solid fa-arrow-right"></i></button>
+  </div>
+
+  <!-- STEP 4: Password & Terms -->
+  <div class="step-view" id="step4">
+    <div class="step-title">Set Security & Terms</div>
+    <div class="step-desc">Password must be unique and at least 8 characters.</div>
+
+    <div class="input-group">
+      <i class="fa-solid fa-lock"></i>
+      <input type="password" id="password" placeholder="Create Password (8+ chars)">
+      <i class="fa-solid fa-eye toggle-password" onclick="togglePasswordVisibility()"></i>
+    </div>
+    <div class="error-msg" id="err4">Password must be at least 8 characters long.</div>
+
+    <div class="step-desc" style="margin-bottom: 6px; font-weight: 600;">Privacy Policy & Terms</div>
+    <div class="privacy-box">
+      Welcome to MessApp. By creating an account, you agree to our policies:<br><br>
+      1. Respect all active community members.<br>
+      2. No abusive language or spam messages allowed.<br>
+      3. Your profile & messages are secured with real-time Firebase authentication.<br>
+      4. End-to-end user privacy is guaranteed on MessApp platform.<br>
+      Scroll and accept terms to complete your registration process.
+    </div>
+
+    <label class="checkbox-container">
+      <input type="checkbox" id="acceptTerms">
+      <span>I Accept Privacy Policy & Terms</span>
+    </label>
+
+    <button class="btn-main" id="registerBtn" onclick="startRegistrationProcess()" disabled>Continue to Register <i class="fa-solid fa-check-circle"></i></button>
+  </div>
+</div>
+
+<!-- 3-Second Fullscreen Loading Screen Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-title">Creating MessApp Account...</div>
+  <div class="loading-sub">Setting up real-time secure database</div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyD68Gmuz3JmwC570rX4h0ShxMe2O8QYLug",
+    authDomain: "exemplary-proxy-423103-s4.firebaseapp.com",
+    databaseURL: "https://exemplary-proxy-423103-s4-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "exemplary-proxy-423103-s4",
+    storageBucket: "exemplary-proxy-423103-s4.firebasestorage.app",
+    messagingSenderId: "454413347434",
+    appId: "1:454413347434:web:d68e8ecf337a333418b813",
+    measurementId: "G-9HP0NPBX0N"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
+
+  let currentStep = 1;
+  let isUsernameValid = false;
+
+  // Step Switcher Engine
+  function showStep(step) {
+    document.querySelectorAll('.step-view').forEach(s => s.classList.remove('active'));
+    document.getElementById(`step${step}`).classList.add('active');
+
+    // Update Back button visibility
+    document.getElementById('backBtn').style.visibility = step === 1 ? 'hidden' : 'visible';
+
+    // Update Step Circles & Progress Bar
+    for(let i = 1; i <= 4; i++) {
+      const circle = document.getElementById(`circle${i}`);
+      if(i < step) {
+        circle.className = "step-circle completed";
+        circle.innerHTML = '<i class="fa-solid fa-check"></i>';
+      } else if(i === step) {
+        circle.className = "step-circle active";
+        circle.innerHTML = i;
+      } else {
+        circle.className = "step-circle";
+        circle.innerHTML = i;
+      }
+    }
+
+    const progressPercent = ((step - 1) / 3) * 100;
+    document.getElementById('progressFill').style.width = `${progressPercent}%`;
+  }
+
+  function nextStep(step) {
+    if(step === 1) {
+      const name = document.getElementById('fullName').value.trim();
+      if(!name) {
+        showError('err1', 'Please enter your full name.');
+        return;
+      }
+      hideError('err1');
+      generateAutoUsername();
+    } 
+    else if(step === 2) {
+      const address = document.getElementById('address').value.trim();
+      const country = document.getElementById('country').value;
+      if(!address || !country) {
+        showError('err2', 'Please enter address and select a country.');
+        return;
+      }
+      hideError('err2');
+    }
+    else if(step === 3) {
+      if(!isUsernameValid) {
+        showError('err3', 'Please enter a valid and available unique username.');
+        return;
+      }
+      hideError('err3');
+    }
+
+    currentStep++;
+    showStep(currentStep);
+  }
+
+  function prevStep() {
+    if(currentStep > 1) {
+      currentStep--;
+      showStep(currentStep);
+    }
+  }
+
+  // Auto Generate Username from Full Name
+  function generateAutoUsername() {
+    const fullName = document.getElementById('fullName').value.trim();
+    if(!fullName) return;
+    
+    let base = fullName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    let randomNum = Math.floor(1000 + Math.random() * 9000);
+    let generated = `${base}_${randomNum}`;
+    
+    document.getElementById('username').value = generated;
+    validateUsername(generated);
+  }
+
+  // Handle Input: Replace space with "_" dynamic
+  function handleUsernameInput(element) {
+    element.value = element.value.replace(/\s+/g, '_').toLowerCase();
+    validateUsername(element.value);
+  }
+
+  // Check Username Uniqueness in Realtime Database
+  async function validateUsername(username) {
+    const errObj = document.getElementById('err3');
+    const succObj = document.getElementById('succ3');
+    
+    // Check length (at least 5 characters)
+    if(username.length < 5) {
+      isUsernameValid = false;
+      succObj.style.display = 'none';
+      showError('err3', 'Username must be more than 4 characters long.');
+      return;
+    }
+
+    // Database check for duplicate username
+    const snapshot = await db.ref('users').orderByChild('username').equalTo(username).once('value');
+    if(snapshot.exists()) {
+      isUsernameValid = false;
+      succObj.style.display = 'none';
+      showError('err3', 'This username is already taken! Try another.');
+    } else {
+      isUsernameValid = true;
+      hideError('err3');
+      succObj.style.display = 'block';
+    }
+  }
+
+  // Password Visibility Toggle
+  function togglePasswordVisibility() {
+    const passInput = document.getElementById('password');
+    const eyeIcon = document.querySelector('.toggle-password');
+    if(passInput.type === 'password') {
+      passInput.type = 'text';
+      eyeIcon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+      passInput.type = 'password';
+      eyeIcon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+  }
+
+  // Terms Checkbox Listener
+  document.getElementById('acceptTerms').addEventListener('change', function() {
+    document.getElementById('registerBtn').disabled = !this.checked;
+  });
+
+  // Start 3-Second Registration Process
+  async function startRegistrationProcess() {
+    const password = document.getElementById('password').value;
+    
+    // Password strength check (8 digits/characters)
+    if(password.length < 8) {
+      showError('err4', 'Password must be at least 8 characters long.');
+      return;
+    }
+    hideError('err4');
+
+    // Show 3-Second Loading Screen Overlay
+    document.getElementById('loadingOverlay').style.display = 'flex';
+
+    setTimeout(async () => {
+      const fullName = document.getElementById('fullName').value.trim();
+      const address = document.getElementById('address').value.trim();
+      const country = document.getElementById('country').value;
+      const username = document.getElementById('username').value.trim().toLowerCase();
+      const email = `${username}@messapp.com`;
+
+      try {
+        // Register in Firebase Auth
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+
+        // Save User Data in Database
+        await db.ref('users/' + user.uid).set({
+          uid: user.uid,
+          fullName: fullName,
+          address: address,
+          country: country,
+          username: username,
+          email: email,
+          createdAt: Date.now()
+        });
+
+        // Redirect to Home page
+        window.location.href = 'home.html';
+      } catch (error) {
+        document.getElementById('loadingOverlay').style.display = 'none';
+        alert("Registration Error: " + error.message);
+      }
+    }, 3000); // Exact 3 second delay
+  }
+
+  // Utility Error Helpers
+  function showError(elementId, text) {
+    const el = document.getElementById(elementId);
+    el.innerText = text;
+    el.style.display = 'block';
+  }
+  function hideError(elementId) {
+    document.getElementById(elementId).style.display = 'none';
+  }
+
+  // Initial setup
+  showStep(1);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MessApp - Notifications</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-color: #111b21;
+      --card-bg: #202c33;
+      --text-color: #e9edef;
+      --subtext-color: #8696a0;
+      --border-color: #222d34;
+      --accent-color: #00a884;
+      --hover-bg: #1f2c34;
+    }
+    [data-theme="light"] {
+      --bg-color: #ffffff;
+      --card-bg: #f0f2f5;
+      --text-color: #111b21;
+      --subtext-color: #667781;
+      --border-color: #e9edef;
+      --accent-color: #008069;
+      --hover-bg: #f5f6f6;
+    }
+    * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+    body { background-color: var(--bg-color); color: var(--text-color); height: 100vh; display: flex; flex-direction: column; }
+    
+    header { background: var(--card-bg); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .back-btn { background: transparent; border: none; color: var(--text-color); font-size: 18px; cursor: pointer; }
+    .title { font-size: 18px; font-weight: 700; }
+    
+    .list-container { flex: 1; overflow-y: auto; }
+    .notif-card { display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; position: relative; }
+    .notif-card:hover { background: var(--hover-bg); }
+    .notif-card.unread { background: rgba(0, 168, 132, 0.08); }
+    
+    .avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--accent-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; flex-shrink: 0; }
+    .details { margin-left: 12px; flex: 1; overflow: hidden; }
+    .top-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .sender-name { font-weight: 700; font-size: 15px; }
+    .time { font-size: 11px; color: var(--subtext-color); }
+    .msg-preview { font-size: 13px; color: var(--subtext-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .unread-dot { width: 8px; height: 8px; background: var(--accent-color); border-radius: 50%; position: absolute; right: 16px; bottom: 16px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <button class="back-btn" onclick="location.href='home.html'"><i class="fa-solid fa-arrow-left"></i></button>
+    <div class="title">Notifications</div>
+  </div>
+  <button class="back-btn" id="muteToggleBtn" onclick="toggleMute()"><i class="fa-solid fa-bell"></i></button>
+</header>
+
+<div class="list-container" id="notifList">
+  <div style="text-align: center; padding: 40px; color: var(--subtext-color);">
+    <i class="fa-solid fa-spinner fa-spin"></i> Loading notifications...
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyD68Gmuz3JmwC570rX4h0ShxMe2O8QYLug",
+    authDomain: "exemplary-proxy-423103-s4.firebaseapp.com",
+    databaseURL: "https://exemplary-proxy-423103-s4-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "exemplary-proxy-423103-s4",
+    storageBucket: "exemplary-proxy-423103-s4.firebasestorage.app",
+    messagingSenderId: "454413347434",
+    appId: "1:454413347434:web:d68e8ecf337a333418b813"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
+  let currentUser = null;
+
+  // Set saved theme
+  const savedTheme = localStorage.getItem('messapp_theme');
+  if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      currentUser = user;
+      updateMuteUI();
+      loadNotifications();
+    } else {
+      window.location.href = 'login.html';
+    }
+  });
+
+  function loadNotifications() {
+    db.ref(`notifications/${currentUser.uid}`).orderByChild('timestamp').on('value', snapshot => {
+      const container = document.getElementById('notifList');
+      container.innerHTML = '';
+
+      if (!snapshot.exists()) {
+        container.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--subtext-color);">Koi notification nahi hai</div>`;
+        return;
+      }
+
+      let items = [];
+      snapshot.forEach(child => {
+        items.push({ id: child.key, ...child.val() });
+      });
+      items.reverse();
+
+      items.forEach(notif => {
+        const card = document.createElement('div');
+        card.className = `notif-card ${notif.read ? '' : 'unread'}`;
+        
+        const timeStr = new Date(notif.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        card.innerHTML = `
+          <div class="avatar">${notif.senderName ? notif.senderName.charAt(0) : 'U'}</div>
+          <div class="details">
+            <div class="top-row">
+              <span class="sender-name">${notif.senderName}</span>
+              <span class="time">${timeStr}</span>
+            </div>
+            <div class="msg-preview">${notif.text}</div>
+          </div>
+          ${notif.read ? '' : '<div class="unread-dot"></div>'}
+        `;
+
+        card.onclick = () => {
+          // Mark as read
+          db.ref(`notifications/${currentUser.uid}/${notif.id}`).update({ read: true });
+          // Redirect to Chat
+          const targetUser = { uid: notif.senderUid, fullName: notif.senderName };
+          localStorage.setItem('messapp_active_target', JSON.stringify(targetUser));
+          window.location.href = `chat.html?uid=${notif.senderUid}`;
+        };
+
+        container.appendChild(card);
+      });
+    });
+  }
+
+  function toggleMute() {
+    const isMuted = localStorage.getItem('messapp_muted') === 'true';
+    localStorage.setItem('messapp_muted', !isMuted);
+    updateMuteUI();
+  }
+
+  function updateMuteUI() {
+    const isMuted = localStorage.getItem('messapp_muted') === 'true';
+    const btn = document.getElementById('muteToggleBtn');
+    btn.innerHTML = isMuted ? '<i class="fa-solid fa-bell-slash" style="color: #f44336;"></i>' : '<i class="fa-solid fa-bell"></i>';
+  }
+</script>
+</body>
+</html>

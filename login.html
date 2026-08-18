@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MessApp - Smart Login</title>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; margin: 0; padding: 0; transition: all 0.3s ease; }
+    
+    body { background: #0b141a; color: #e9edef; height: 100vh; width: 100vw; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+    
+    /* Full Screen App Wrapper */
+    .app-screen { width: 100%; height: 100%; max-width: 480px; background: #111b21; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
+
+    /* App Header */
+    .app-header { background: #202c33; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #222d34; }
+    .app-title { font-size: 22px; font-weight: 800; color: #00a884; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
+    .app-title i { font-size: 20px; }
+
+    /* Main Container */
+    .main-content { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; }
+
+    /* Search Header Box */
+    .search-box { position: relative; margin-bottom: 20px; }
+    .search-box i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #8696a0; font-size: 16px; }
+    .search-box input { width: 100%; padding: 14px 14px 14px 46px; background: #202c33; border: 1px solid #2a3942; border-radius: 30px; color: #fff; font-size: 15px; outline: none; }
+    .search-box input:focus { border-color: #00a884; box-shadow: 0 0 10px rgba(0, 168, 132, 0.2); }
+
+    /* User List Section */
+    .section-label { font-size: 13px; color: #8696a0; margin-bottom: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .user-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+
+    /* User Card */
+    .user-card { background: #1f2c34; border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
+    .user-card:hover, .user-card.selected { background: #2a3942; border-color: #00a884; transform: translateY(-1px); }
+    .avatar { width: 44px; height: 44px; border-radius: 50%; background: #00a884; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; text-transform: uppercase; }
+    .user-info { flex: 1; }
+    .user-info .name { font-size: 16px; font-weight: 600; color: #e9edef; }
+    .user-info .username { font-size: 13px; color: #8696a0; }
+
+    /* Modal / Bottom Sheet for Password Verification */
+    .password-modal { position: absolute; bottom: -100%; left: 0; right: 0; background: #1f2c34; border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 25px 20px; box-shadow: 0 -10px 30px rgba(0,0,0,0.6); transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 100; border-top: 1px solid rgba(0, 168, 132, 0.3); }
+    .password-modal.active { bottom: 0; }
+
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+    .selected-user-badge { display: flex; align-items: center; gap: 10px; background: #111b21; padding: 8px 14px; border-radius: 30px; }
+    .selected-user-badge .avatar-sm { width: 28px; height: 28px; border-radius: 50%; background: #00a884; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
+    
+    .close-btn { background: rgba(255,255,255,0.05); border: none; color: #8696a0; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .close-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
+
+    /* Inputs */
+    .input-group { position: relative; margin-bottom: 14px; }
+    .input-group i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #8696a0; font-size: 15px; }
+    .input-group input { width: 100%; padding: 13px 40px 13px 42px; background: #111b21; border: 1px solid #2a3942; border-radius: 12px; color: #fff; font-size: 14px; outline: none; }
+    .input-group input:focus { border-color: #00a884; }
+    .toggle-pass { right: 14px; left: auto !important; cursor: pointer; color: #8696a0; }
+
+    .btn-main { width: 100%; padding: 14px; background: #00a884; color: #fff; font-size: 15px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 10px; }
+    .btn-main:hover { background: #008f6f; }
+
+    .error-msg { color: #f15c6d; font-size: 12px; margin-bottom: 10px; display: none; }
+    .success-msg { color: #00a884; font-size: 12px; margin-bottom: 10px; display: none; }
+
+    .footer-link { text-align: center; margin-top: auto; padding-top: 15px; font-size: 14px; color: #8696a0; }
+    .footer-link a { color: #00a884; text-decoration: none; font-weight: bold; }
+
+    /* 3 Sec Fullscreen Loader Overlay */
+    .loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0b141a; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 999; }
+    .spinner { width: 55px; height: 55px; border: 5px solid #2a3942; border-top: 5px solid #00a884; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 18px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .loading-title { font-size: 20px; font-weight: bold; color: #00a884; margin-bottom: 6px; }
+    .loading-sub { font-size: 13px; color: #8696a0; }
+  </style>
+</head>
+<body>
+
+<div class="app-screen">
+  <!-- Header -->
+  <div class="app-header">
+    <div class="app-title"><i class="fa-solid fa-comments"></i> MessApp Login</div>
+  </div>
+
+  <!-- Content Body -->
+  <div class="main-content">
+    
+    <!-- Top Search Bar -->
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="searchInput" placeholder="Search name or @username..." oninput="filterUsers()">
+    </div>
+
+    <div class="section-label" id="listLabel">Select your account to login</div>
+
+    <!-- Dynamic User List -->
+    <div class="user-list" id="userList">
+      <div style="text-align: center; padding: 30px; color: #8696a0;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading users...</div>
+    </div>
+
+    <div class="footer-link">
+      Account nahi hai? <a href="register.html">Register karein</a>
+    </div>
+  </div>
+
+  <!-- Password Bottom Modal (2-Step Verification) -->
+  <div class="password-modal" id="passModal">
+    <div class="modal-header">
+      <div class="selected-user-badge">
+        <div class="avatar-sm" id="badgeAvatar">U</div>
+        <span id="badgeName" style="font-size: 13px; font-weight: 600;">User Name</span>
+      </div>
+      <button class="close-btn" onclick="closePasswordModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <!-- Step 1: First Password Entry -->
+    <div id="passStep1">
+      <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #e9edef;">Enter Password:</div>
+      <div class="input-group">
+        <i class="fa-solid fa-lock"></i>
+        <input type="password" id="firstPassword" placeholder="Enter Password">
+        <i class="fa-solid fa-eye toggle-pass" onclick="togglePass('firstPassword', this)"></i>
+      </div>
+      <div class="error-msg" id="errPass1">Password galat hai ya khali hai.</div>
+      <button class="btn-main" onclick="verifyFirstPassword()"><i class="fa-solid fa-shield-halved"></i> Verify Password</button>
+    </div>
+
+    <!-- Step 2: Confirm Password Match -->
+    <div id="passStep2" style="display: none;">
+      <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #00a884;"><i class="fa-solid fa-circle-check"></i> First Pass Verified! Confirm again:</div>
+      <div class="input-group">
+        <i class="fa-solid fa-lock"></i>
+        <input type="password" id="secondPassword" placeholder="Re-enter same password">
+        <i class="fa-solid fa-eye toggle-pass" onclick="togglePass('secondPassword', this)"></i>
+      </div>
+      <div class="error-msg" id="errPass2">Passwords match nahi ho rahe hain!</div>
+      <div class="success-msg" id="succPass2">Match successful! Logging in...</div>
+      <button class="btn-main" id="finalLoginBtn" onclick="confirmAndLogin()"><i class="fa-solid fa-arrow-right-to-bracket"></i> Confirm & Complete Login</button>
+    </div>
+  </div>
+
+  <!-- Fullscreen 3 Sec Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-title" id="loadingTitle">Verifying Account...</div>
+    <div class="loading-sub">Connecting to MessApp realtime servers</div>
+  </div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyD68Gmuz3JmwC570rX4h0ShxMe2O8QYLug",
+    authDomain: "exemplary-proxy-423103-s4.firebaseapp.com",
+    databaseURL: "https://exemplary-proxy-423103-s4-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "exemplary-proxy-423103-s4",
+    storageBucket: "exemplary-proxy-423103-s4.firebasestorage.app",
+    messagingSenderId: "454413347434",
+    appId: "1:454413347434:web:d68e8ecf337a333418b813",
+    measurementId: "G-9HP0NPBX0N"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
+
+  let allUsers = [];
+  let selectedUser = null;
+
+  // Load All Users from Realtime Database
+  window.addEventListener('DOMContentLoaded', () => {
+    db.ref('users').once('value', snapshot => {
+      allUsers = [];
+      snapshot.forEach(child => {
+        allUsers.push(child.val());
+      });
+      renderUserList(allUsers);
+    }).catch(err => {
+      document.getElementById('userList').innerHTML = `<div style="text-align:center; color:#f15c6d;">Error loading users</div>`;
+    });
+  });
+
+  // Render User Cards
+  function renderUserList(users) {
+    const container = document.getElementById('userList');
+    container.innerHTML = '';
+
+    if (users.length === 0) {
+      container.innerHTML = `<div style="text-align:center; padding: 20px; color:#8696a0;">Koi account nahi mila</div>`;
+      return;
+    }
+
+    users.forEach(user => {
+      const card = document.createElement('div');
+      card.className = 'user-card';
+      card.onclick = () => selectUserForLogin(user);
+      card.innerHTML = `
+        <div class="avatar">${user.fullName ? user.fullName.charAt(0) : 'U'}</div>
+        <div class="user-info">
+          <div class="name">${user.fullName}</div>
+          <div class="username">@${user.username}</div>
+        </div>
+        <i class="fa-solid fa-chevron-right" style="color: #8696a0; font-size: 12px;"></i>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  // Live Filter Users on Search
+  function filterUsers() {
+    const query = document.getElementById('searchInput').value.trim().toLowerCase();
+    const filtered = allUsers.filter(u => 
+      (u.fullName && u.fullName.toLowerCase().includes(query)) ||
+      (u.username && u.username.toLowerCase().includes(query))
+    );
+    renderUserList(filtered);
+  }
+
+  // Open Password Modal for Selected User
+  function selectUserForLogin(user) {
+    selectedUser = user;
+    document.getElementById('badgeName').innerText = `${user.fullName} (@${user.username})`;
+    document.getElementById('badgeAvatar').innerText = user.fullName ? user.fullName.charAt(0) : 'U';
+
+    // Reset fields
+    document.getElementById('firstPassword').value = '';
+    document.getElementById('secondPassword').value = '';
+    document.getElementById('errPass1').style.display = 'none';
+    document.getElementById('errPass2').style.display = 'none';
+    document.getElementById('succPass2').style.display = 'none';
+    
+    // Show Step 1 first
+    document.getElementById('passStep1').style.display = 'block';
+    document.getElementById('passStep2').style.display = 'none';
+
+    document.getElementById('passModal').classList.add('active');
+  }
+
+  function closePasswordModal() {
+    document.getElementById('passModal').classList.remove('active');
+  }
+
+  // Step 1: Verify Password Input Existence
+  function verifyFirstPassword() {
+    const pass = document.getElementById('firstPassword').value;
+    if (!pass || pass.length < 1) {
+      document.getElementById('errPass1').style.display = 'block';
+      return;
+    }
+    document.getElementById('errPass1').style.display = 'none';
+
+    // Proceed to Step 2 (Re-enter/Confirm)
+    document.getElementById('passStep1').style.display = 'none';
+    document.getElementById('passStep2').style.display = 'block';
+  }
+
+  // Step 2: Confirm both passwords match & Login
+  async function confirmAndLogin() {
+    const firstPass = document.getElementById('firstPassword').value;
+    const secondPass = document.getElementById('secondPassword').value;
+
+    const err2 = document.getElementById('errPass2');
+    const succ2 = document.getElementById('succPass2');
+
+    if (firstPass !== secondPass) {
+      err2.innerText = "Dono Passwords match nahi kar rahe hain! Sahi password enter karein.";
+      err2.style.display = 'block';
+      succ2.style.display = 'none';
+      return;
+    }
+
+    err2.style.display = 'none';
+    succ2.style.display = 'block';
+
+    // Show 3-Second Fullscreen Loading Screen
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    document.getElementById('loadingTitle').innerText = `Authenticating @${selectedUser.username}...`;
+
+    const email = `${selectedUser.username}@messapp.com`;
+
+    setTimeout(async () => {
+      try {
+        await auth.signInWithEmailAndPassword(email, secondPass);
+        // Successful login -> Redirect to home.html
+        window.location.href = 'home.html';
+      } catch (error) {
+        document.getElementById('loadingOverlay').style.display = 'none';
+        closePasswordModal();
+        alert("Login Failed: Password galat hai. Kripya sahi password dalein.");
+      }
+    }, 3000); // 3-second exact delay
+  }
+
+  // Hide / Unhide Password Toggle
+  function togglePass(inputId, icon) {
+    const inp = document.getElementById(inputId);
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+      inp.type = 'password';
+      icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+  }
+</script>
+
+</body>
+</html>

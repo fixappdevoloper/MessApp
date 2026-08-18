@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MessApp - Search</title>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-color: #111b21;
+      --card-bg: #202c33;
+      --text-color: #e9edef;
+      --subtext-color: #8696a0;
+      --border-color: #222d34;
+      --accent-color: #00a884;
+      --hover-bg: #1f2c34;
+      --input-bg: #2a3942;
+    }
+
+    [data-theme="light"] {
+      --bg-color: #ffffff;
+      --card-bg: #f0f2f5;
+      --text-color: #111b21;
+      --subtext-color: #667781;
+      --border-color: #e9edef;
+      --accent-color: #008069;
+      --hover-bg: #f5f6f6;
+      --input-bg: #e9edef;
+    }
+
+    * { box-sizing: border-box; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; margin: 0; padding: 0; transition: background 0.2s, color 0.2s; }
+    body { background-color: var(--bg-color); color: var(--text-color); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Top Search Bar */
+    header { background: var(--card-bg); padding: 10px 14px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border-color); }
+    .back-btn { background: transparent; border: none; color: var(--text-color); font-size: 18px; cursor: pointer; padding: 6px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .back-btn:hover { background: rgba(255,255,255,0.08); }
+
+    .search-box { flex: 1; position: relative; display: flex; align-items: center; }
+    .search-box input { width: 100%; background: var(--input-bg); border: none; outline: none; color: var(--text-color); padding: 10px 36px 10px 38px; border-radius: 20px; font-size: 15px; }
+    .search-box .search-icon { position: absolute; left: 12px; color: var(--subtext-color); font-size: 14px; }
+    .search-box .clear-icon { position: absolute; right: 12px; color: var(--subtext-color); font-size: 14px; cursor: pointer; display: none; }
+
+    /* Search Filters (Under Search Box) */
+    .filter-tabs { display: flex; background: var(--card-bg); border-bottom: 1px solid var(--border-color); padding: 4px 16px; gap: 10px; }
+    .filter-btn { background: transparent; border: 1px solid var(--border-color); color: var(--subtext-color); padding: 6px 16px; border-radius: 16px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .filter-btn.active { background: var(--accent-color); color: #fff; border-color: var(--accent-color); }
+
+    /* Results Area */
+    .main-container { flex: 1; overflow-y: auto; background: var(--bg-color); }
+    
+    .user-card { display: flex; align-items: center; padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border-color); }
+    .user-card:hover { background: var(--hover-bg); }
+    
+    .avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--accent-color); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; text-transform: uppercase; flex-shrink: 0; }
+    
+    .user-details { margin-left: 14px; flex: 1; overflow: hidden; }
+    .user-details .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .user-details .name { font-weight: 700; font-size: 16px; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-details .time { font-size: 12px; color: var(--subtext-color); }
+    .user-details .subtext { font-size: 13px; color: var(--subtext-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    
+    /* Highlight Search Keyword */
+    .highlight { color: var(--accent-color); font-weight: bold; }
+    
+    .no-result { text-align: center; padding: 50px 20px; color: var(--subtext-color); }
+  </style>
+</head>
+<body>
+
+<!-- Header with Back Button and Search Box -->
+<header>
+  <button class="back-btn" onclick="goBack()" title="Back">
+    <i class="fa-solid fa-arrow-left"></i>
+  </button>
+  <div class="search-box">
+    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+    <input type="text" id="searchInput" placeholder="Search users by name or @username..." oninput="handleSearch()">
+    <i class="fa-solid fa-xmark clear-icon" id="clearBtn" onclick="clearSearch()"></i>
+  </div>
+</header>
+
+<!-- Filter Tabs under Search Bar -->
+<div class="filter-tabs">
+  <button class="filter-btn active" id="btnUsers" onclick="setSearchFilter('users')">
+    <i class="fa-solid fa-user"></i> All Users
+  </button>
+  <button class="filter-btn" id="btnChats" onclick="setSearchFilter('chats')">
+    <i class="fa-solid fa-comments"></i> Messages
+  </button>
+</div>
+
+<!-- Search Results Container -->
+<div class="main-container" id="resultsContainer">
+  <div class="no-result">
+    <i class="fa-solid fa-circle-notch fa-spin"></i> Loading search index...
+  </div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyD68Gmuz3JmwC570rX4h0ShxMe2O8QYLug",
+    authDomain: "exemplary-proxy-423103-s4.firebaseapp.com",
+    databaseURL: "https://exemplary-proxy-423103-s4-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "exemplary-proxy-423103-s4",
+    storageBucket: "exemplary-proxy-423103-s4.firebasestorage.app",
+    messagingSenderId: "454413347434",
+    appId: "1:454413347434:web:d68e8ecf337a333418b813",
+    measurementId: "G-9HP0NPBX0N"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
+
+  let currentUser = null;
+  let allUsersMap = {};
+  let allChatMessages = []; // Cached array of messages
+  let currentFilter = 'users'; // 'users' or 'chats'
+
+  // Load Saved Theme
+  const savedTheme = localStorage.getItem('messapp_theme');
+  if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+
+  // Auth Protection
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      currentUser = user;
+      fetchInitialData();
+    } else {
+      window.location.href = 'login.html';
+    }
+  });
+
+  // Fetch Users and Recent Messages
+  function fetchInitialData() {
+    // 1. Fetch Users
+    db.ref('users').once('value', snapshot => {
+      allUsersMap = {};
+      snapshot.forEach(child => {
+        const u = child.val();
+        if (u.uid !== currentUser.uid) {
+          allUsersMap[u.uid] = u;
+        }
+      });
+
+      // 2. Fetch Chat Messages for Message Search
+      fetchMessagesData();
+    });
+  }
+
+  function fetchMessagesData() {
+    db.ref('chats').once('value', snapshot => {
+      allChatMessages = [];
+      snapshot.forEach(roomSnap => {
+        const roomId = roomSnap.key;
+        if (roomId.includes(currentUser.uid)) {
+          const uids = roomId.split('_');
+          const partnerUid = uids[0] === currentUser.uid ? uids[1] : uids[0];
+
+          roomSnap.forEach(msgSnap => {
+            const msg = msgSnap.val();
+            if (msg.text) {
+              allChatMessages.push({
+                partnerUid: partnerUid,
+                text: msg.text,
+                timestamp: msg.timestamp,
+                sender: msg.sender
+              });
+            }
+          });
+        }
+      });
+
+      // Sort messages descending by time
+      allChatMessages.sort((a, b) => b.timestamp - a.timestamp);
+      
+      // Perform initial render
+      handleSearch();
+    });
+  }
+
+  // Switch Filter (Users vs Messages)
+  function setSearchFilter(type) {
+    currentFilter = type;
+    document.getElementById('btnUsers').classList.toggle('active', type === 'users');
+    document.getElementById('btnChats').classList.toggle('active', type === 'chats');
+    
+    const input = document.getElementById('searchInput');
+    if (type === 'users') {
+      input.placeholder = "Search users by name or @username...";
+    } else {
+      input.placeholder = "Search messages from previous chats...";
+    }
+    
+    handleSearch();
+  }
+
+  // Live Search Handler
+  function handleSearch() {
+    const query = document.getElementById('searchInput').value.trim().toLowerCase();
+    const clearBtn = document.getElementById('clearBtn');
+    clearBtn.style.display = query.length > 0 ? 'block' : 'none';
+
+    if (currentFilter === 'users') {
+      searchUsers(query);
+    } else {
+      searchMessages(query);
+    }
+  }
+
+  // 1. Search Users Function
+  function searchUsers(query) {
+    const container = document.getElementById('resultsContainer');
+    container.innerHTML = '';
+
+    const userList = Object.values(allUsersMap);
+    
+    const filtered = userList.filter(user => {
+      const nameMatch = user.fullName && user.fullName.toLowerCase().includes(query);
+      const usernameMatch = user.username && user.username.toLowerCase().includes(query);
+      return nameMatch || usernameMatch;
+    });
+
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div class="no-result">
+          <i class="fa-solid fa-user-slash" style="font-size:32px; margin-bottom:10px;"></i><br>
+          Koi user nahi mila '${query}' नाम से।
+        </div>`;
+      return;
+    }
+
+    filtered.forEach(user => {
+      const card = document.createElement('div');
+      card.className = 'user-card';
+      card.onclick = () => openChatPage(user);
+      card.innerHTML = `
+        <div class="avatar">${user.fullName ? user.fullName.charAt(0) : 'U'}</div>
+        <div class="user-details">
+          <div class="top-row">
+            <div class="name">${user.fullName}</div>
+          </div>
+          <div class="subtext">@${user.username} • ${user.country || 'MessApp User'}</div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  // 2. Search Previous Messages Function
+  function searchMessages(query) {
+    const container = document.getElementById('resultsContainer');
+    container.innerHTML = '';
+
+    if (!query) {
+      container.innerHTML = `
+        <div class="no-result">
+          <i class="fa-solid fa-magnifying-glass" style="font-size:32px; margin-bottom:10px;"></i><br>
+          पुराने मैसेज सर्च करने के लिए कुछ टाइप करें।
+        </div>`;
+      return;
+    }
+
+    const filteredMsgs = allChatMessages.filter(m => m.text.toLowerCase().includes(query));
+
+    if (filteredMsgs.length === 0) {
+      container.innerHTML = `
+        <div class="no-result">
+          <i class="fa-solid fa-comment-slash" style="font-size:32px; margin-bottom:10px;"></i><br>
+          '${query}' से जुड़ा कोई मैसेज नहीं मिला।
+        </div>`;
+      return;
+    }
+
+    filteredMsgs.forEach(msgItem => {
+      const targetUser = allUsersMap[msgItem.partnerUid];
+      if (!targetUser) return;
+
+      const formattedTime = new Date(msgItem.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const senderPrefix = msgItem.sender === currentUser.uid ? 'You: ' : '';
+
+      const card = document.createElement('div');
+      card.className = 'user-card';
+      card.onclick = () => openChatPage(targetUser);
+
+      card.innerHTML = `
+        <div class="avatar">${targetUser.fullName ? targetUser.fullName.charAt(0) : 'U'}</div>
+        <div class="user-details">
+          <div class="top-row">
+            <div class="name">${targetUser.fullName}</div>
+            <div class="time">${formattedTime}</div>
+          </div>
+          <div class="subtext">${senderPrefix}${msgItem.text}</div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  // Open Target Chat Page
+  function openChatPage(targetUser) {
+    localStorage.setItem('messapp_active_target', JSON.stringify(targetUser));
+    window.location.href = `chat.html?uid=${targetUser.uid}`;
+  }
+
+  // Clear Input Box
+  function clearSearch() {
+    document.getElementById('searchInput').value = '';
+    handleSearch();
+  }
+
+  // Back Navigation
+  function goBack() {
+    window.location.href = 'home.html';
+  }
+</script>
+
+</body>
+</html>
