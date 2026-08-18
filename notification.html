@@ -5,6 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>MessApp - Notifications</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- OneSignal Web Push SDK -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "6cb9c042-5204-457a-aa8f-b8815d009ca5",
+      });
+    });
+  </script>
+
   <style>
     :root {
       --bg-color: #111b21;
@@ -82,13 +94,17 @@
   const db = firebase.database();
   let currentUser = null;
 
-  // Set saved theme
   const savedTheme = localStorage.getItem('messapp_theme');
   if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
 
   auth.onAuthStateChanged(user => {
     if (user) {
       currentUser = user;
+      
+      window.OneSignalDeferred.push(function(OneSignal) {
+        OneSignal.login(user.uid);
+      });
+
       updateMuteUI();
       loadNotifications();
     } else {
@@ -131,9 +147,7 @@
         `;
 
         card.onclick = () => {
-          // Mark as read
           db.ref(`notifications/${currentUser.uid}/${notif.id}`).update({ read: true });
-          // Redirect to Chat
           const targetUser = { uid: notif.senderUid, fullName: notif.senderName };
           localStorage.setItem('messapp_active_target', JSON.stringify(targetUser));
           window.location.href = `chat.html?uid=${notif.senderUid}`;
