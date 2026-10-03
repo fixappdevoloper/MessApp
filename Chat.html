@@ -5,6 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>MessApp - Chat</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- OneSignal Web Push SDK -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "6cb9c042-5204-457a-aa8f-b8815d009ca5",
+      });
+    });
+  </script>
+
   <style>
     :root {
       --bg-color: #0b141a;
@@ -16,6 +28,7 @@
       --msg-sent: #005c4b;
       --msg-received: #202c33;
       --input-bg: #2a3942;
+      --action-bg: rgba(32, 44, 51, 0.95);
     }
 
     [data-theme="light"] {
@@ -28,58 +41,235 @@
       --msg-sent: #d9fdd3;
       --msg-received: #ffffff;
       --input-bg: #ffffff;
+      --action-bg: rgba(255, 255, 255, 0.95);
     }
 
     * { box-sizing: border-box; font-family: 'Segoe UI', -apple-system, Roboto, sans-serif; margin: 0; padding: 0; }
-    body { background-color: var(--bg-color); color: var(--text-color); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    
+    body { 
+      background-color: var(--bg-color); 
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      color: var(--text-color); 
+      height: 100vh; 
+      display: flex; 
+      flex-direction: column; 
+      overflow: hidden; 
+      transition: background 0.3s ease;
+    }
 
-    header { background: var(--header-bg); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); z-index: 100; }
+    /* Top Bar & Header */
+    header { 
+      background: var(--header-bg); 
+      padding: 10px 14px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      border-bottom: 1px solid var(--border-color); 
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
     .header-left { display: flex; align-items: center; gap: 12px; }
     .back-btn { background: transparent; border: none; color: var(--text-color); font-size: 18px; cursor: pointer; padding: 4px; }
     
     .profile-wrap { display: flex; align-items: center; gap: 10px; cursor: pointer; }
     .avatar-container { position: relative; }
-    .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--accent-color); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; text-transform: uppercase; }
-    .status-dot { width: 11px; height: 11px; border-radius: 50%; background: #8696a0; position: absolute; bottom: 0; right: 0; border: 2px solid var(--header-bg); }
-    .status-dot.online { background: #00a884; }
+    .avatar { width: 42px; height: 42px; border-radius: 50%; background: var(--accent-color); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; text-transform: uppercase; }
+    .status-dot { width: 12px; height: 12px; border-radius: 50%; background: #8696a0; position: absolute; bottom: 0; right: 0; border: 2px solid var(--header-bg); }
+    .status-dot.online { background: #00a884; box-shadow: 0 0 8px #00a884; }
 
     .user-info .name { font-size: 16px; font-weight: 700; color: var(--text-color); line-height: 1.2; }
     .user-info .status-text { font-size: 12px; color: var(--subtext-color); }
 
-    .chat-box { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth; }
-    
-    .msg-wrapper { display: flex; flex-direction: column; max-width: 75%; }
+    .header-right { display: flex; align-items: center; gap: 15px; }
+    .menu-btn { background: transparent; border: none; color: var(--text-color); font-size: 20px; cursor: pointer; position: relative; }
+
+    /* Dropdown Menu */
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 50px;
+      right: 14px;
+      background: var(--header-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      z-index: 200;
+      width: 220px;
+      overflow: hidden;
+      animation: fadeIn 0.2s ease-out;
+    }
+    .dropdown-item {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      color: var(--text-color);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .dropdown-item:hover { background: var(--input-bg); }
+
+    /* Chat Area */
+    .chat-box { 
+      flex: 1; 
+      padding: 16px; 
+      overflow-y: auto; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 12px; 
+      scroll-behavior: smooth;
+      position: relative;
+    }
+
+    /* Typing Indicator */
+    .typing-indicator {
+      display: none;
+      align-items: center;
+      gap: 4px;
+      background: var(--msg-received);
+      padding: 8px 16px;
+      border-radius: 18px;
+      width: fit-content;
+      margin-bottom: 8px;
+      animation: fadeIn 0.3s;
+    }
+    .typing-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--subtext-color);
+      border-radius: 50%;
+      animation: typing 1.4s infinite ease-in-out;
+    }
+    .typing-dot:nth-child(1) { animation-delay: 0s; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typing { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+    /* Messages & Swipe Wrapper */
+    .msg-wrapper { 
+      display: flex; 
+      flex-direction: column; 
+      max-width: 80%; 
+      position: relative;
+      touch-action: pan-y;
+      transition: transform 0.2s cubic-bezier(0.1, 0.7, 0.1, 1);
+    }
     .msg-wrapper.sent { align-self: flex-end; }
     .msg-wrapper.received { align-self: flex-start; }
 
-    .message { padding: 8px 12px; border-radius: 12px; font-size: 14.5px; word-wrap: break-word; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.15); user-select: none; cursor: pointer; }
-    .sent .message { background: var(--msg-sent); color: var(--text-color); border-top-right-radius: 2px; }
-    .received .message { background: var(--msg-received); color: var(--text-color); border-top-left-radius: 2px; }
-    
+    .message { 
+      padding: 10px 14px; 
+      border-radius: 16px; 
+      font-size: 15px; 
+      line-height: 1.4;
+      word-wrap: break-word; 
+      position: relative; 
+      box-shadow: 0 2px 5px rgba(0,0,0,0.12); 
+      user-select: none; 
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    .sent .message { background: var(--msg-sent); color: var(--text-color); border-bottom-right-radius: 4px; }
+    .received .message { background: var(--msg-received); color: var(--text-color); border-bottom-left-radius: 4px; }
+
+    /* Emoji-Only Message Style */
+    .message.emoji-only {
+      background: transparent !important;
+      box-shadow: none !important;
+      font-size: 42px;
+      padding: 0;
+    }
+
     .msg-deleted { font-style: italic; opacity: 0.7; }
-    .msg-time { font-size: 10px; color: var(--subtext-color); float: right; margin-top: 4px; margin-left: 10px; }
+    .msg-time { font-size: 10px; color: var(--subtext-color); float: right; margin-top: 6px; margin-left: 10px; }
 
-    .emoji-picker { display: none; grid-template-columns: repeat(7, 1fr); gap: 8px; padding: 12px; background: var(--header-bg); border-top: 1px solid var(--border-color); max-height: 160px; overflow-y: auto; text-align: center; font-size: 20px; }
-    .emoji-picker span { cursor: pointer; padding: 4px; border-radius: 4px; }
-    .emoji-picker span:hover { background: var(--input-bg); }
+    /* Like Badge */
+    .like-badge {
+      position: absolute;
+      bottom: -8px;
+      right: 8px;
+      background: #e91e63;
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      animation: popIn 0.2s ease-out;
+    }
 
-    .format-bar { display: flex; gap: 12px; background: var(--header-bg); padding: 6px 16px; border-top: 1px solid var(--border-color); font-size: 13px; color: var(--subtext-color); }
+    /* Read More / Hide Toggle */
+    .read-more-btn {
+      color: var(--accent-color);
+      font-weight: bold;
+      cursor: pointer;
+      display: inline-block;
+      margin-top: 4px;
+      font-size: 13px;
+    }
+
+    /* Fixed Input Bar */
+    .input-container-wrapper {
+      position: sticky;
+      bottom: 0;
+      width: 100%;
+      background: var(--header-bg);
+      border-top: 1px solid var(--border-color);
+      z-index: 100;
+    }
+    
+    .format-bar { display: flex; gap: 12px; background: var(--header-bg); padding: 6px 16px; border-bottom: 1px solid var(--border-color); font-size: 13px; color: var(--subtext-color); }
     .format-btn { cursor: pointer; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
     .format-btn:hover { background: var(--input-bg); color: var(--text-color); }
 
-    .input-area { background: var(--header-bg); padding: 8px 12px; display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--border-color); position: sticky; bottom: 0; }
+    .emoji-picker { display: none; grid-template-columns: repeat(7, 1fr); gap: 8px; padding: 12px; background: var(--header-bg); border-top: 1px solid var(--border-color); max-height: 160px; overflow-y: auto; text-align: center; font-size: 22px; }
+    .emoji-picker span { cursor: pointer; padding: 4px; border-radius: 6px; }
+    .emoji-picker span:hover { background: var(--input-bg); }
+
+    .input-area { padding: 10px 12px; display: flex; align-items: center; gap: 8px; }
     .input-btn { background: transparent; border: none; color: var(--subtext-color); font-size: 20px; cursor: pointer; padding: 6px; }
     
-    .input-box { flex: 1; background: var(--input-bg); border: none; border-radius: 20px; padding: 10px 16px; color: var(--text-color); outline: none; font-size: 15px; }
-    .send-btn { background: var(--accent-color); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .input-box { flex: 1; background: var(--input-bg); border: none; border-radius: 24px; padding: 12px 18px; color: var(--text-color); outline: none; font-size: 15px; }
+    .send-btn { background: var(--accent-color); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: transform 0.1s; }
+    .send-btn:active { transform: scale(0.9); }
 
-    .action-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: flex-end; }
-    .action-sheet { background: var(--header-bg); width: 100%; max-width: 500px; border-top-left-radius: 16px; border-top-right-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; animation: slideUp 0.2s ease-out; }
+    /* Action Modal Sheet */
+    .action-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: flex-end; backdrop-filter: blur(3px); }
+    .action-sheet { background: var(--action-bg); width: 100%; max-width: 500px; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 8px; animation: slideUp 0.25s ease-out; }
     @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
-    .action-item { display: flex; align-items: center; gap: 14px; padding: 12px; border-radius: 8px; font-size: 16px; cursor: pointer; color: var(--text-color); }
+    .action-item { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: 12px; font-size: 15px; cursor: pointer; color: var(--text-color); transition: background 0.2s; }
     .action-item:hover { background: var(--input-bg); }
-    .action-item.danger { color: #f44336; }
+    .action-item.danger { color: #ff4d4d; }
+
+    /* Custom Image Cropper / Selector Modal */
+    .crop-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+    .crop-container { width: 100%; max-width: 350px; height: 450px; background: #000; border-radius: 12px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
+    .crop-container img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .crop-actions { display: flex; gap: 12px; margin-top: 16px; width: 100%; max-width: 350px; }
+    .crop-btn { flex: 1; padding: 12px; border-radius: 24px; border: none; font-weight: bold; cursor: pointer; }
+    .crop-btn.apply { background: var(--accent-color); color: white; }
+    .crop-btn.cancel { background: #444; color: white; }
+
+    /* Animations */
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes popIn { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
+    
+    /* Dissolve / Particle Deletion Animation */
+    .dissolve-out {
+      animation: dissolveAnim 0.6s forwards ease-out;
+    }
+    @keyframes dissolveAnim {
+      0% { transform: scale(1); filter: blur(0px); opacity: 1; }
+      50% { transform: scale(0.9) translateY(-10px); filter: blur(4px); opacity: 0.5; }
+      100% { transform: scale(0) translateY(-20px); filter: blur(10px); opacity: 0; }
+    }
   </style>
 </head>
 <body>
@@ -98,36 +288,83 @@
       </div>
     </div>
   </div>
+  <div class="header-right">
+    <button class="menu-btn" onclick="toggleDropdown()"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+  </div>
 </header>
 
-<div class="chat-box" id="chatBox"></div>
-
-<div class="format-bar">
-  <span>Formatting:</span>
-  <span class="format-btn" onclick="applyFormat('*')"><b>B</b></span>
-  <span class="format-btn" onclick="applyFormat('_')"><i>I</i></span>
-  <span class="format-btn" onclick="applyFormat('~')"><del>S</del></span>
+<!-- Dropdown Menu -->
+<div class="dropdown-menu" id="dropdownMenu">
+  <div class="dropdown-item" onclick="openGallerySelect()"><i class="fa-solid fa-image"></i> Select Theme/Background</div>
+  <div class="dropdown-item" onclick="toggleArchivedChats()"><i class="fa-solid fa-box-archive"></i> Archived Chats</div>
+  <div class="dropdown-item" onclick="showDeletedMessagesModal()"><i class="fa-solid fa-trash-arrow-up"></i> Deleted Messages</div>
 </div>
 
-<div class="emoji-picker" id="emojiPicker">
-  <span onclick="addEmoji('😊')">😊</span><span onclick="addEmoji('😂')">😂</span>
-  <span onclick="addEmoji('❤️')">❤️</span><span onclick="addEmoji('👍')">👍</span>
-  <span onclick="addEmoji('🔥')">🔥</span><span onclick="addEmoji('🙏')">🙏</span>
-  <span onclick="addEmoji('😍')">😍</span><span onclick="addEmoji('😎')">😎</span>
+<div class="chat-box" id="chatBox">
+  <!-- Messages Render Here -->
 </div>
 
-<div class="input-area">
-  <button class="input-btn" id="emojiToggleBtn"><i class="fa-regular fa-face-smile"></i></button>
-  <input type="text" class="input-box" id="msgInput" placeholder="Message aalein..." autocomplete="off">
-  <button class="send-btn" id="sendBtn"><i class="fa-solid fa-paper-plane"></i></button>
+<!-- Typing Indicator -->
+<div class="typing-indicator" id="typingIndicator">
+  <div class="typing-dot"></div>
+  <div class="typing-dot"></div>
+  <div class="typing-dot"></div>
 </div>
 
+<!-- Fixed Input Container -->
+<div class="input-container-wrapper">
+  <div class="format-bar">
+    <span>Formatting:</span>
+    <span class="format-btn" onclick="applyFormat('*')"><b>B</b></span>
+    <span class="format-btn" onclick="applyFormat('_')"><i>I</i></span>
+    <span class="format-btn" onclick="applyFormat('~')"><del>S</del></span>
+  </div>
+
+  <div class="emoji-picker" id="emojiPicker">
+    <span onclick="addEmoji('😊')">😊</span><span onclick="addEmoji('😂')">😂</span>
+    <span onclick="addEmoji('❤️')">❤️</span><span onclick="addEmoji('👍')">👍</span>
+    <span onclick="addEmoji('🔥')">🔥</span><span onclick="addEmoji('🙏')">🙏</span>
+    <span onclick="addEmoji('😍')">😍</span><span onclick="addEmoji('😎')">😎</span>
+    <span onclick="addEmoji('🎉')">🎉</span><span onclick="addEmoji('✨')">✨</span>
+    <span onclick="addEmoji('👏')">👏</span><span onclick="addEmoji('💯')">💯</span>
+  </div>
+
+  <div class="input-area">
+    <button class="input-btn" id="emojiToggleBtn"><i class="fa-regular fa-face-smile"></i></button>
+    <input type="text" class="input-box" id="msgInput" placeholder="Write a message..." autocomplete="off">
+    <button class="send-btn" id="sendBtn"><i class="fa-solid fa-paper-plane"></i></button>
+  </div>
+</div>
+
+<!-- Action Modal (Long Press / Swipe Options) -->
 <div class="action-modal" id="actionModal" onclick="closeActionModal(event)">
   <div class="action-sheet" onclick="event.stopPropagation()">
     <div class="action-item" onclick="copyMessage()"><i class="fa-regular fa-copy"></i> Copy</div>
+    <div class="action-item" onclick="shareMessage()"><i class="fa-solid fa-share-nodes"></i> Share</div>
     <div class="action-item" onclick="resendMessage()"><i class="fa-solid fa-rotate-right"></i> Resend</div>
+    <div class="action-item" onclick="archiveMessage()"><i class="fa-solid fa-box-archive"></i> Archive</div>
     <div class="action-item danger" onclick="deleteMessage('me')"><i class="fa-solid fa-trash-can"></i> Delete for me</div>
-    <div class="action-item danger" id="deleteEveryoneBtn" onclick="deleteMessage('everyone')"><i class="fa-solid fa-users-slash"></i> Delete for everyone</div>
+    <div class="action-item danger" id="deleteEveryoneBtn" onclick="deleteMessage('everyone')"><i class="fa-solid fa-users-slash"></i> Always Delete (Everyone)</div>
+  </div>
+</div>
+
+<!-- Deleted Messages Restore Modal -->
+<div class="action-modal" id="deletedModal" onclick="closeDeletedModal(event)">
+  <div class="action-sheet" onclick="event.stopPropagation()">
+    <h3 style="padding: 10px; text-align: center;">Deleted Messages</h3>
+    <div id="deletedListContainer" style="max-height: 300px; overflow-y: auto;"></div>
+  </div>
+</div>
+
+<!-- Gallery Selection & Crop Modal -->
+<input type="file" id="bgFileInput" accept="image/*" style="display: none;" onchange="handleImageSelect(event)">
+<div class="crop-modal" id="cropModal">
+  <div class="crop-container">
+    <img id="cropPreview" src="" alt="Background Preview">
+  </div>
+  <div class="crop-actions">
+    <button class="crop-btn cancel" onclick="closeCropModal()">Cancel</button>
+    <button class="crop-btn apply" onclick="saveBackground()">Apply Theme</button>
   </div>
 </div>
 
@@ -156,9 +393,18 @@
   let selectedMsgData = null;
   let pressTimer = null;
   let myProfileData = {};
+  let typingTimeout = null;
+  let selectedBgDataUrl = null;
 
+  // Sync Theme from Local Storage
   const savedTheme = localStorage.getItem('messapp_theme');
   if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+
+  // Load Custom Background Image if present
+  const savedBg = localStorage.getItem('messapp_chat_bg');
+  if (savedBg) {
+    document.body.style.backgroundImage = `url(${savedBg})`;
+  }
 
   const urlParams = new URLSearchParams(window.location.search);
   const targetUid = urlParams.get('uid');
@@ -166,6 +412,11 @@
   auth.onAuthStateChanged(user => {
     if (user) {
       currentUser = user;
+      
+      window.OneSignalDeferred.push(function(OneSignal) {
+        OneSignal.login(user.uid);
+      });
+
       fetchMyProfile();
       setupPresence(user.uid);
       initChat();
@@ -190,6 +441,7 @@
     if (targetUid) {
       activeRoomId = getChatRoomId(currentUser.uid, targetUid);
       listenPresence();
+      listenTypingStatus();
       loadMessages();
     }
   }
@@ -225,23 +477,59 @@
     });
   }
 
+  /* Typing Animation Listener */
+  function listenTypingStatus() {
+    db.ref(`typing/${activeRoomId}/${targetUid}`).on('value', snap => {
+      const isTyping = snap.val();
+      const indicator = document.getElementById('typingIndicator');
+      if (isTyping) {
+        indicator.style.display = 'flex';
+        scrollToBottom();
+      } else {
+        indicator.style.display = 'none';
+      }
+    });
+  }
+
+  /* Trigger Typing Status */
+  document.getElementById('msgInput').addEventListener('input', () => {
+    if (!activeRoomId) return;
+    db.ref(`typing/${activeRoomId}/${currentUser.uid}`).set(true);
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+      db.ref(`typing/${activeRoomId}/${currentUser.uid}`).set(false);
+    }, 2000);
+  });
+
+  /* Load Messages with Offline First / Local Storage support */
   function loadMessages() {
+    const localMsgs = localStorage.getItem(`msgs_${activeRoomId}`);
+    if (localMsgs) {
+      renderMessagesList(JSON.parse(localMsgs));
+    }
+
     db.ref('chats/' + activeRoomId).on('value', snapshot => {
       const messages = [];
       snapshot.forEach(child => {
         const msgKey = child.key;
         const msgVal = child.val();
 
-        // Mark as Read if recipient reads it
         if (msgVal.sender !== currentUser.uid && !msgVal.read) {
           db.ref(`chats/${activeRoomId}/${msgKey}`).update({ read: true });
         }
 
         messages.push({ id: msgKey, ...msgVal });
       });
+      localStorage.setItem(`msgs_${activeRoomId}`, JSON.stringify(messages));
       renderMessagesList(messages);
       scrollToBottom();
     });
+  }
+
+  /* Check Emoji Only Message */
+  function isOnlyEmoji(str) {
+    const emojiRegex = /^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])+$/;
+    return emojiRegex.test(str.trim());
   }
 
   function renderMessagesList(messages) {
@@ -254,23 +542,104 @@
       const isSent = msg.sender === currentUser.uid;
       const msgWrapper = document.createElement('div');
       msgWrapper.className = `msg-wrapper ${isSent ? 'sent' : 'received'}`;
+      msgWrapper.id = `msg-${msg.id}`;
 
       const msgDiv = document.createElement('div');
-      msgDiv.className = 'message';
+      const isEmoji = msg.text && isOnlyEmoji(msg.text);
+      msgDiv.className = `message ${isEmoji ? 'emoji-only' : ''}`;
       
-      let formattedText = msg.isDeleted ? '<span class="msg-deleted"><i class="fa-solid fa-ban"></i> Deleted</span>' : parseMarkdown(msg.text);
+      let formattedText = msg.isDeleted ? '<span class="msg-deleted"><i class="fa-solid fa-ban"></i> Message Deleted</span>' : parseMarkdown(msg.text);
+
+      // Long text - Hide/Show feature
+      if (!msg.isDeleted && msg.text && msg.text.length > 180) {
+        const shortText = parseMarkdown(msg.text.substring(0, 180));
+        formattedText = `<span class="short-content">${shortText}...</span><span class="full-content" style="display:none;">${parseMarkdown(msg.text)}</span> <span class="read-more-btn" onclick="toggleReadMore(this)">Read More</span>`;
+      }
+
       const timeStr = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-      msgDiv.innerHTML = `${formattedText} <span class="msg-time">${timeStr}</span>`;
+      msgDiv.innerHTML = `${formattedText} ${!isEmoji ? `<span class="msg-time">${timeStr}</span>` : ''}`;
 
-      msgDiv.addEventListener('touchstart', (e) => startHold(e, msg), {passive: true});
-      msgDiv.addEventListener('touchend', endHold);
-      msgDiv.addEventListener('mousedown', (e) => startHold(e, msg));
-      msgDiv.addEventListener('mouseup', endHold);
+      // Double Click Like Heart Badge
+      if (msg.liked) {
+        const likeBadge = document.createElement('div');
+        likeBadge.className = 'like-badge';
+        likeBadge.innerHTML = '<i class="fa-solid fa-heart"></i>';
+        msgDiv.appendChild(likeBadge);
+      }
+
+      // Event Listeners for Drag/Swipe, Double Click & Long Press
+      setupDragAndGesture(msgWrapper, msgDiv, msg);
 
       msgWrapper.appendChild(msgDiv);
       chatBox.appendChild(msgWrapper);
     });
+  }
+
+  function toggleReadMore(btn) {
+    const parent = btn.parentElement;
+    const shortContent = parent.querySelector('.short-content');
+    const fullContent = parent.querySelector('.full-content');
+    if (fullContent.style.display === 'none') {
+      fullContent.style.display = 'inline';
+      shortContent.style.display = 'none';
+      btn.innerText = 'Show Less';
+    } else {
+      fullContent.style.display = 'none';
+      shortContent.style.display = 'inline';
+      btn.innerText = 'Read More';
+    }
+  }
+
+  /* Gestures: Swipe, Long Press, Double Click */
+  function setupDragAndGesture(wrapper, msgDiv, msg) {
+    let startX = 0;
+    let currentX = 0;
+    let clickTimer = null;
+
+    // Double Tap/Click To Like
+    msgDiv.addEventListener('click', () => {
+      if (clickTimer == null) {
+        clickTimer = setTimeout(() => {
+          clickTimer = null;
+        }, 300);
+      } else {
+        clearTimeout(clickTimer);
+        clickTimer = null;
+        toggleLikeMessage(msg);
+      }
+    });
+
+    // Touch & Swipe Actions
+    msgDiv.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      startHold(e, msg);
+    }, {passive: true});
+
+    msgDiv.addEventListener('touchmove', (e) => {
+      currentX = e.touches[0].clientX - startX;
+      if (Math.abs(currentX) < 100) {
+        wrapper.style.transform = `translateX(${currentX}px)`;
+      }
+    }, {passive: true});
+
+    msgDiv.addEventListener('touchend', () => {
+      endHold();
+      if (Math.abs(currentX) > 60) {
+        openActionModal(msg);
+      }
+      wrapper.style.transform = 'translateX(0px)';
+      currentX = 0;
+    });
+
+    // Mouse Events
+    msgDiv.addEventListener('mousedown', (e) => startHold(e, msg));
+    msgDiv.addEventListener('mouseup', endHold);
+  }
+
+  function toggleLikeMessage(msg) {
+    const newLikedState = !msg.liked;
+    db.ref(`chats/${activeRoomId}/${msg.id}`).update({ liked: newLikedState });
   }
 
   function parseMarkdown(text) {
@@ -299,15 +668,14 @@
 
     const timestamp = Date.now();
 
-    // 1. Push Message to Chat
     db.ref('chats/' + activeRoomId).push({
       sender: currentUser.uid,
       text: text,
       timestamp: timestamp,
-      read: false
+      read: false,
+      liked: false
     });
 
-    // 2. Push Realtime Notification to Target User
     db.ref(`notifications/${targetUid}`).push({
       senderUid: currentUser.uid,
       senderName: myProfileData.fullName || 'MessApp User',
@@ -315,6 +683,9 @@
       timestamp: timestamp,
       read: false
     });
+
+    // Stop Typing
+    db.ref(`typing/${activeRoomId}/${currentUser.uid}`).set(false);
 
     input.value = '';
     document.getElementById('emojiPicker').style.display = 'none';
@@ -357,6 +728,15 @@
     closeActionModal();
   }
 
+  function shareMessage() {
+    if (navigator.share && selectedMsgData?.text) {
+      navigator.share({ title: 'MessApp Chat', text: selectedMsgData.text });
+    } else {
+      copyMessage();
+    }
+    closeActionModal();
+  }
+
   function resendMessage() {
     if(selectedMsgData?.text) {
       document.getElementById('msgInput').value = selectedMsgData.text;
@@ -365,14 +745,110 @@
     closeActionModal();
   }
 
-  function deleteMessage(type) {
-    if (!selectedMsgData) return;
-    if (type === 'everyone') {
-      db.ref(`chats/${activeRoomId}/${selectedMsgData.id}`).update({ isDeleted: true, text: '' });
-    } else {
-      db.ref(`chats/${activeRoomId}/${selectedMsgData.id}/deletedFor/${currentUser.uid}`).set(true);
+  function archiveMessage() {
+    if (selectedMsgData) {
+      let archives = JSON.parse(localStorage.getItem('archived_msgs') || '[]');
+      archives.push(selectedMsgData);
+      localStorage.setItem('archived_msgs', JSON.stringify(archives));
+      alert('Message archived locally.');
     }
     closeActionModal();
+  }
+
+  /* Animated Deletion (Particles & Blur) */
+  function deleteMessage(type) {
+    if (!selectedMsgData) return;
+    
+    const targetEl = document.getElementById(`msg-${selectedMsgData.id}`);
+    if (targetEl) targetEl.classList.add('dissolve-out');
+
+    setTimeout(() => {
+      if (type === 'everyone') {
+        db.ref(`chats/${activeRoomId}/${selectedMsgData.id}`).update({ isDeleted: true, text: '' });
+      } else {
+        db.ref(`chats/${activeRoomId}/${selectedMsgData.id}/deletedFor/${currentUser.uid}`).set(true);
+      }
+      closeActionModal();
+    }, 550);
+  }
+
+  /* Header 3-Dots Dropdown Options */
+  function toggleDropdown() {
+    const menu = document.getElementById('dropdownMenu');
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+  }
+
+  window.onclick = function(event) {
+    if (!event.target.matches('.menu-btn') && !event.target.matches('.fa-ellipsis-vertical')) {
+      document.getElementById('dropdownMenu').style.display = 'none';
+    }
+  };
+
+  /* Custom Chat Background / Gallery Crop Selection */
+  function openGallerySelect() {
+    document.getElementById('bgFileInput').click();
+  }
+
+  function handleImageSelect(event) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        selectedBgDataUrl = e.target.result;
+        document.getElementById('cropPreview').src = selectedBgDataUrl;
+        document.getElementById('cropModal').style.display = 'flex';
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function closeCropModal() {
+    document.getElementById('cropModal').style.display = 'none';
+  }
+
+  function saveBackground() {
+    if (selectedBgDataUrl) {
+      document.body.style.backgroundImage = `url(${selectedBgDataUrl})`;
+      localStorage.setItem('messapp_chat_bg', selectedBgDataUrl);
+    }
+    closeCropModal();
+  }
+
+  /* Restore / Show Deleted Messages */
+  function showDeletedMessagesModal() {
+    const container = document.getElementById('deletedListContainer');
+    container.innerHTML = '';
+    
+    db.ref('chats/' + activeRoomId).once('value', snap => {
+      snap.forEach(child => {
+        const msg = child.val();
+        if (msg.deletedFor && msg.deletedFor[currentUser.uid]) {
+          const item = document.createElement('div');
+          item.className = 'action-item';
+          item.style.justifyContent = 'space-between';
+          item.innerHTML = `<span>${msg.text || 'Soft Deleted'}</span> 
+            <button style="padding: 4px 8px; border-radius: 6px; background: var(--accent-color); color: #fff; border:none;" onclick="restoreMessage('${child.key}')">Restore</button>`;
+          container.appendChild(item);
+        }
+      });
+      document.getElementById('deletedModal').style.display = 'flex';
+    });
+  }
+
+  function restoreMessage(msgKey) {
+    db.ref(`chats/${activeRoomId}/${msgKey}/deletedFor/${currentUser.uid}`).remove();
+    closeDeletedModal();
+  }
+
+  function closeDeletedModal(e) {
+    if(!e || e.target.id === 'deletedModal') {
+      document.getElementById('deletedModal').style.display = 'none';
+    }
+  }
+
+  function toggleArchivedChats() {
+    const archives = JSON.parse(localStorage.getItem('archived_msgs') || '[]');
+    alert(`Total Archived Messages: ${archives.length}`);
   }
 
   function getChatRoomId(uid1, uid2) {
