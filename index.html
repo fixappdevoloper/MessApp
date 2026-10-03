@@ -1,13 +1,48 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
+  <!-- 1. Basic Character & Viewport Tags -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  
-  <!-- Google Search Console Verification Meta Tag -->
+
+  <!-- 2. Primary Meta Tags (Google Search & SEO) -->
+  <title>MessApp - Realtime Messaging & Chat App</title>
+  <meta name="title" content="MessApp - Realtime Messaging & Chat App">
+  <meta name="description" content="MessApp - अपनों के साथ जुड़ें तेज़, सुरक्षित और रिअल-टाइम मैसेंजर पर। फ्री चैट, स्वाइप एक्शन्स और डार्क मोड का मज़ा लें।">
+  <meta name="keywords" content="MessApp, Mess App, MessApp chat, MessApp web, MessApp messenger, real time chat app, MessApp login">
+  <meta name="author" content="MessApp Team">
+  <meta name="robots" content="index, follow">
+
+  <!-- 3. Google Search Console Verification Tag -->
   <meta name="google-site-verification" content="qisIEM4mLscimv0Yw45H0vQUB9oBM7D8YExZnbYS1wE" />
 
-  <title>MessApp - The Ultimate Modern Messaging Experience</title>
+  <!-- 4. Open Graph / Facebook Meta Tags (Social Media Sharing) -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://fixappdevoloper.github.io/messapp/"> <!-- अपनी वेबसाइट का असली URL यहाँ डालें -->
+  <meta property="og:title" content="MessApp - Realtime Messaging & Chat App">
+  <meta property="og:description" content="जुड़ें अपनों के साथ, MessApp के तेज़ और सुरक्षित प्लेटफ़ॉर्म पर।">
+  <meta property="og:image" content="https://fixappdevoloper.github.io/messapp/assets/og-image.png"> <!-- लोगो या ऐप का बैनर इमेज URL -->
+
+  <!-- 5. Twitter Meta Tags -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://fixappdevoloper.github.io/messapp/">
+  <meta property="twitter:title" content="MessApp - Realtime Messaging & Chat App">
+  <meta property="twitter:description" content="जुड़ें अपनों के साथ, MessApp के तेज़ और सुरक्षित प्लेटफ़ॉर्म पर।">
+  <meta property="twitter:image" content="https://fixappdevoloper.github.io/messapp/assets/og-image.png">
+
+  <!-- 6. Schema Markup (Structured Data for Google Brand Recognition) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "MessApp",
+    "alternateName": ["Mess App", "MessApp Web"],
+    "url": "https://fixappdevoloper.github.io/messapp/",
+    "applicationCategory": "SocialNetworkingApplication",
+    "operatingSystem": "All",
+    "description": "MessApp एक तेज़ और सुरक्षित रिअल-टाइम मैसेंजर ऐप है।"
+  }
+  </script>
 
   <!-- Font Awesome Icons & Google Fonts -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -507,7 +542,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
 <script>
-  // Firebase Configuration (Same as home.html)
+  // Firebase Configuration
   const firebaseConfig = {
     apiKey: "AIzaSyD68Gmuz3JmwC570rX4h0ShxMe2O8QYLug",
     authDomain: "exemplary-proxy-423103-s4.firebaseapp.com",
@@ -564,7 +599,6 @@
     const authContainer = document.getElementById('authContainer');
 
     if (user) {
-      // User is LOGGED IN -> Fetch Profile Info & Show Avatar
       db.ref(`users/${user.uid}`).once('value').then(snapshot => {
         const userData = snapshot.val() || {};
         const fullName = userData.fullName || user.displayName || 'User';
@@ -582,7 +616,6 @@
           </div>
         `;
       }).catch(() => {
-        // Fallback if DB fetch fails
         const firstLetter = (user.email || 'U').charAt(0).toUpperCase();
         authContainer.innerHTML = `
           <div class="user-profile-badge" onclick="window.location.href='account.html'">
@@ -595,7 +628,6 @@
       });
 
     } else {
-      // User NOT LOGGED IN -> Show Login & Register Buttons
       authContainer.innerHTML = `
         <a href="login.html" class="btn btn-outline" style="padding: 7px 14px; font-size:13px;">लॉगिन</a>
         <a href="register.html" class="btn btn-primary" style="padding: 7px 14px; font-size:13px;">रजिस्टर</a>
