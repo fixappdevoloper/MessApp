@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MessApp - Account Profile</title>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Canvas Library for Image Sharing and Download -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    :root {
+      --bg-color: #0b141a;
+      --card-bg: #111b21;
+      --card-surface: #202c33;
+      --text-main: #e9edef;
+      --text-sub: #8696a0;
+      --accent: #00a884;
+      --danger: #f44336;
+      --border: rgba(255, 255, 255, 0.08);
+      --glass: rgba(17, 27, 33, 0.85);
+      --highlight: #00f2fe;
+    }
+
+    [data-theme="light"] {
+      --bg-color: #f0f2f5;
+      --card-bg: #ffffff;
+      --card-surface: #f7f9fa;
+      --text-main: #111b21;
+      --text-sub: #667781;
+      --accent: #008069;
+      --danger: #d32f2f;
+      --border: rgba(0, 0, 0, 0.08);
+      --glass: rgba(255, 255, 255, 0.85);
+      --highlight: #0072ff;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    /* Header */
+    header {
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-size: 18px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .icon-btn:active {
+      background: var(--border);
+    }
+
+    /* Top Dropdown Menu */
+    .dropdown-menu {
+      position: absolute;
+      top: 55px;
+      right: 16px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      display: none;
+      flex-direction: column;
+      width: 180px;
+      overflow: hidden;
+      z-index: 200;
+    }
+
+    .dropdown-menu.show { display: flex; }
+
+    .dropdown-item {
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .dropdown-item:hover {
+      background: var(--card-surface);
+    }
+
+    /* Animated Avatar Container */
+    .profile-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .avatar-animated-large {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      padding: 4px;
+      background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bf7, #7a00ff, #ff00c8);
+      background-size: 400% 400%;
+      animation: rotateBorder 4s linear infinite;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+      margin-bottom: 14px;
+    }
+
+    @keyframes rotateBorder {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .avatar-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: var(--bg-color);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .user-name-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 2px;
+    }
+
+    .user-handle {
+      font-size: 14px;
+      color: var(--highlight);
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .user-country-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-surface);
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 13px;
+      color: var(--text-sub);
+      border: 1px solid var(--border);
+    }
+
+    /* Details Section */
+    .details-container {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .info-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .info-icon {
+      font-size: 18px;
+      color: var(--accent);
+      margin-top: 2px;
+    }
+
+    .info-content {
+      flex: 1;
+    }
+
+    .info-label {
+      font-size: 12px;
+      color: var(--text-sub);
+      font-weight: 600;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+
+    .info-value {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.4;
+    }
+
+    /* Buttons */
+    .action-btn-primary {
+      width: 100%;
+      background: linear-gradient(45deg, var(--accent), #00d2ff);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 30px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(0, 168, 132, 0.3);
+      margin-top: 10px;
+    }
+
+    .action-btn-danger {
+      width: 100%;
+      background: transparent;
+      color: var(--danger);
+      border: 1.5px solid var(--danger);
+      padding: 12px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    /* Edit Drawer (Full Page) */
+    .full-drawer {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--bg-color);
+      z-index: 300;
+      display: none;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .full-drawer.active { display: flex; }
+
+    .drawer-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-sub);
+    }
+
+    .form-group input, .form-group textarea {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 12px 14px;
+      border-radius: 12px;
+      color: var(--text-main);
+      font-size: 15px;
+      outline: none;
+    }
+
+    .form-group input:focus, .form-group textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .limit-warning {
+      background: rgba(255, 165, 0, 0.15);
+      border: 1px solid orange;
+      color: orange;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    /* Hidden Export Card for Image Share & Download */
+    #exportProfileCard {
+      position: absolute;
+      left: -9999px;
+      top: -9999px;
+      width: 320px;
+      padding: 24px;
+      background: #111b21;
+      color: #ffffff;
+      border-radius: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <button class="icon-btn" onclick="location.href='home.html'" title="Back to Home">
+    <i class="fa-solid fa-arrow-left"></i>
+  </button>
+  <div class="header-title">My Account</div>
+  <button class="icon-btn" onclick="toggleDropdown()" title="More Options">
+    <i class="fa-solid fa-ellipsis-vertical"></i>
+  </button>
+
+  <!-- 3-Dots Dropdown Menu -->
+  <div class="dropdown-menu" id="dotsMenu">
+    <div class="dropdown-item" onclick="shareProfileImage()">
+      <i class="fa-solid fa-share-nodes"></i> Share Card
+    </div>
+    <div class="dropdown-item" onclick="downloadProfileImage()">
+      <i class="fa-solid fa-download"></i> Download Card
+    </div>
+  </div>
+</header>
+
+<!-- Hero Section with Animated DP -->
+<div class="profile-hero" id="profileHero">
+  <div class="avatar-animated-large">
+    <div class="avatar-inner" id="dpLetter">U</div>
+  </div>
+  <div class="user-name-title" id="dispFullName">Loading...</div>
+  <div class="user-handle" id="dispUsername">@user</div>
+  <div class="user-country-badge">
+    <i class="fa-solid fa-globe"></i> <span id="dispCountry">India</span>
+  </div>
+</div>
+
+<!-- Details Container -->
+<div class="details-container">
+  
+  <div class="info-card">
+    <i class="fa-solid fa-envelope info-icon"></i>
+    <div class="info-content">
+      <div class="info-label">Email Address</div>
+      <div class="info-value" id="dispEmail">loading...</div>
+    </div>
+  </div>
+
+  <div class="info-card">
+    <i class="fa-solid fa-map-location-dot info-icon"></i>
+    <div class="info-content">
+      <div class="info-label">Registered Address</div>
+      <div class="info-value" id="dispAddress">Not Provided</div>
+    </div>
+  </div>
+
+  <!-- Options under Profile Details -->
+  <button class="action-btn-primary" onclick="openEditDrawer()">
+    <i class="fa-solid fa-user-pen"></i> Edit Your Details
+  </button>
+
+  <button class="action-btn-danger" onclick="handleLogout()">
+    <i class="fa-solid fa-right-from-bracket"></i> Logout Account
+  </button>
+</div>
+
+<!-- Full-Page Edit Details Drawer -->
+<div class="full-drawer" id="editDrawer">
+  <header>
+    <button class="icon-btn" onclick="closeEditDrawer()">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+    <div class="header-title">Edit Details</div>
+    <button class="icon-btn" style="color:var(--accent);" onclick="saveAndPublishDetails()">
+      <i class="fa-solid fa-check"></i>
+    </button>
+  </header>
+
+  <div class="drawer-body">
+    <div class="limit-warning">
+      <i class="fa-solid fa-triangle-exclamation"></i> 
+      Note: You can update your details only 2 times every 10 days.
+    </div>
+
+    <div class="form-group">
+      <label>Full Name</label>
+      <input type="text" id="editFullName" placeholder="Enter full name">
+    </div>
+
+    <div class="form-group">
+      <label>Country</label>
+      <input type="text" id="editCountry" placeholder="Enter country name">
+    </div>
+
+    <div class="form-group">
+      <label>Registered Address</label>
+      <textarea id="editAddress" rows="3" placeholder="Enter address"></textarea>
+    </div>
+
+    <button class="action-btn-primary" style="margin-top:15px;" onclick="saveAndPublishDetails()">
+      <i class="fa-solid fa-floppy-disk"></i> Save & Publish
+    </button>
+  </div>
+</div>
+
+<!-- Offscreen Card for Canvas Image Export -->
+<div id="exportProfileCard">
+  <div style="font-size: 32px; font-weight: 800; color: #00f2fe; margin-bottom: 10px;" id="expDp">U</div>
+  <div style="font-size: 18px; font-weight: 700;" id="expName">User Name</div>
+  <div style="font-size: 13px; color: #8696a0;" id="expUser">@username</div>
+  <div style="font-size: 13px; color: #00a884; margin-top: 8px;" id="expCtry">India</div>
+  <div style="font-size: 12px; color: #8696a0; margin-top: 10px; background: #202c33; padding: 8px; border-radius: 8px;" id="expAddr">Address</div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyD68Gmuz3JmwC570rX4h0ShxMe2O8QYLug",
+    authDomain: "exemplary-proxy-423103-s4.firebaseapp.com",
+    databaseURL: "https://exemplary-proxy-423103-s4-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "exemplary-proxy-423103-s4",
+    storageBucket: "exemplary-proxy-423103-s4.firebasestorage.app",
+    messagingSenderId: "454413347434",
+    appId: "1:454413347434:web:d68e8ecf337a333418b813"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
+
+  let currentUser = null;
+  let userData = {};
+
+  // Theme Initializer matching home.html
+  const savedTheme = localStorage.getItem('messapp_theme');
+  if (savedTheme) {
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }
+
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      currentUser = user;
+      fetchAccountDetails();
+    } else {
+      window.location.href = 'login.html';
+    }
+  });
+
+  // Fetch Live Profile Information
+  function fetchAccountDetails() {
+    db.ref(`users/${currentUser.uid}`).on('value', snapshot => {
+      userData = snapshot.val() || {};
+
+      const fullName = userData.fullName || currentUser.displayName || 'User';
+      const username = userData.username || 'user';
+      const country = userData.country || 'India';
+      const address = userData.address || 'Address not registered yet';
+
+      // Set Display Values
+      document.getElementById('dpLetter').innerText = fullName.charAt(0).toUpperCase();
+      document.getElementById('dispFullName').innerText = fullName;
+      document.getElementById('dispUsername').innerText = `@${username}`;
+      document.getElementById('dispCountry').innerText = country;
+      document.getElementById('dispEmail').innerText = currentUser.email;
+      document.getElementById('dispAddress').innerText = address;
+
+      // Populate Inputs for Edit Form
+      document.getElementById('editFullName').value = fullName;
+      document.getElementById('editCountry').value = country;
+      document.getElementById('editAddress').value = address;
+    });
+  }
+
+  // 10-Day Update Restriction Logic (Max 2 Updates in 10 Days)
+  function checkUpdateEligibility() {
+    const history = userData.updateHistory || [];
+    const now = Date.now();
+    const tenDaysMs = 10 * 24 * 60 * 60 * 1000;
+
+    // Filter updates done within last 10 days
+    const recentUpdates = history.filter(time => (now - time) < tenDaysMs);
+
+    return {
+      canUpdate: recentUpdates.length < 2,
+      count: recentUpdates.length,
+      validHistory: recentUpdates
+    };
+  }
+
+  function saveAndPublishDetails() {
+    const newName = document.getElementById('editFullName').value.trim();
+    const newCountry = document.getElementById('editCountry').value.trim();
+    const newAddress = document.getElementById('editAddress').value.trim();
+
+    if (!newName) {
+      alert('Name cannot be empty!');
+      return;
+    }
+
+    const check = checkUpdateEligibility();
+    if (!check.canUpdate) {
+      alert('⚠️ Limit Exceeded: You can only update your profile details 2 times in 10 days!');
+      return;
+    }
+
+    const updatedHistory = [...check.validHistory, Date.now()];
+
+    // Save Real-Time to Database
+    db.ref(`users/${currentUser.uid}`).update({
+      fullName: newName,
+      country: newCountry,
+      address: newAddress,
+      updateHistory: updatedHistory
+    }).then(() => {
+      alert('✅ Profile details updated & published successfully!');
+      closeEditDrawer();
+    }).catch(err => {
+      alert('Error updating profile: ' + err.message);
+    });
+  }
+
+  // Drawers & Dropdown Actions
+  function toggleDropdown() {
+    document.getElementById('dotsMenu').classList.toggle('show');
+  }
+
+  window.addEventListener('click', e => {
+    if (!e.target.closest('.icon-btn') && !e.target.closest('.dropdown-menu')) {
+      document.getElementById('dotsMenu').classList.remove('show');
+    }
+  });
+
+  function openEditDrawer() {
+    document.getElementById('editDrawer').classList.add('active');
+  }
+
+  function closeEditDrawer() {
+    document.getElementById('editDrawer').classList.remove('active');
+  }
+
+  // Image Generation for Share & Download
+  async function generateCanvas() {
+    document.getElementById('expDp').innerText = document.getElementById('dpLetter').innerText;
+    document.getElementById('expName').innerText = document.getElementById('dispFullName').innerText;
+    document.getElementById('expUser').innerText = document.getElementById('dispUsername').innerText;
+    document.getElementById('expCtry').innerText = document.getElementById('dispCountry').innerText;
+    document.getElementById('expAddr').innerText = document.getElementById('dispAddress').innerText;
+
+    const exportEl = document.getElementById('exportProfileCard');
+    return await html2canvas(exportEl, { backgroundColor: '#111b21', scale: 2 });
+  }
+
+  async function shareProfileImage() {
+    toggleDropdown();
+    try {
+      const canvas = await generateCanvas();
+      canvas.toBlob(async blob => {
+        const file = new File([blob], 'profile_card.png', { type: 'image/png' });
+        if (navigator.share && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'My MessApp Profile' });
+        } else {
+          alert('Sharing is not supported on this device. Try Downloading instead.');
+        }
+      });
+    } catch (e) {
+      alert('Error generating profile image.');
+    }
+  }
+
+  async function downloadProfileImage() {
+    toggleDropdown();
+    try {
+      const canvas = await generateCanvas();
+      const link = document.createElement('a');
+      link.download = 'my_messapp_profile.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    } catch (e) {
+      alert('Error downloading profile image.');
+    }
+  }
+
+  function handleLogout() {
+    if (confirm('Are you sure you want to logout?')) {
+      auth.signOut().then(() => {
+        localStorage.clear();
+        window.location.href = 'login.html';
+      });
+    }
+  }
+</script>
+
+</body>
+</html>

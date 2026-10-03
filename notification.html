@@ -4,9 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>MessApp - Notifications</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <!-- OneSignal Web Push SDK -->
+  <!-- Modern Font & Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Canvas Library for Share as Image -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <!-- OneSignal SDK -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -19,61 +25,488 @@
 
   <style>
     :root {
-      --bg-color: #111b21;
-      --card-bg: #202c33;
-      --text-color: #e9edef;
-      --subtext-color: #8696a0;
-      --border-color: #222d34;
-      --accent-color: #00a884;
-      --hover-bg: #1f2c34;
+      --bg-color: #0b141a;
+      --card-bg: #111b21;
+      --card-surface: #202c33;
+      --text-main: #e9edef;
+      --text-sub: #8696a0;
+      --accent: #00a884;
+      --accent-hover: #008f70;
+      --danger: #f44336;
+      --info: #2196f3;
+      --purple: #9c27b0;
+      --border: rgba(255, 255, 255, 0.08);
+      --glass: rgba(17, 27, 33, 0.85);
     }
+
     [data-theme="light"] {
-      --bg-color: #ffffff;
-      --card-bg: #f0f2f5;
-      --text-color: #111b21;
-      --subtext-color: #667781;
-      --border-color: #e9edef;
-      --accent-color: #008069;
-      --hover-bg: #f5f6f6;
+      --bg-color: #f0f2f5;
+      --card-bg: #ffffff;
+      --card-surface: #f7f9fa;
+      --text-main: #111b21;
+      --text-sub: #667781;
+      --accent: #008069;
+      --accent-hover: #006e5a;
+      --border: rgba(0, 0, 0, 0.08);
+      --glass: rgba(255, 255, 255, 0.85);
     }
-    * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
-    body { background-color: var(--bg-color); color: var(--text-color); height: 100vh; display: flex; flex-direction: column; }
-    
-    header { background: var(--card-bg); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); }
-    .header-left { display: flex; align-items: center; gap: 12px; }
-    .back-btn { background: transparent; border: none; color: var(--text-color); font-size: 18px; cursor: pointer; }
-    .title { font-size: 18px; font-weight: 700; }
-    
-    .list-container { flex: 1; overflow-y: auto; }
-    .notif-card { display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; position: relative; }
-    .notif-card:hover { background: var(--hover-bg); }
-    .notif-card.unread { background: rgba(0, 168, 132, 0.08); }
-    
-    .avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--accent-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; flex-shrink: 0; }
-    .details { margin-left: 12px; flex: 1; overflow: hidden; }
-    .top-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
-    .sender-name { font-weight: 700; font-size: 15px; }
-    .time { font-size: 11px; color: var(--subtext-color); }
-    .msg-preview { font-size: 13px; color: var(--subtext-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .unread-dot { width: 8px; height: 8px; background: var(--accent-color); border-radius: 50%; position: absolute; right: 16px; bottom: 16px; }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Header Styling */
+    header {
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-size: 18px;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .icon-btn:active {
+      background: var(--border);
+    }
+
+    .title {
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      position: relative;
+    }
+
+    /* List Container */
+    .list-container {
+      flex: 1;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+
+    /* Swipeable Card Components */
+    .swipe-wrapper {
+      position: relative;
+      overflow: hidden;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .swipe-actions {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .swipe-actions.left-actions {
+      left: 0;
+    }
+
+    .swipe-actions.right-actions {
+      right: 0;
+      flex-direction: row-reverse;
+    }
+
+    .action-btn {
+      width: 65px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-archive { background-color: var(--accent); }
+    .btn-copy { background-color: var(--info); }
+    .btn-share { background-color: var(--purple); }
+    .btn-delete { background-color: var(--danger); }
+
+    .notif-card {
+      position: relative;
+      background: var(--card-bg);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 2;
+      transition: transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      user-select: none;
+    }
+
+    .notif-card.unread {
+      background: rgba(0, 168, 132, 0.06);
+    }
+
+    .avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #005c4b);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .details {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .sender-name {
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .time {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    .msg-preview {
+      font-size: 13px;
+      color: var(--text-sub);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .unread-badge {
+      width: 9px;
+      height: 9px;
+      background: var(--accent);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Menu Dropdown */
+    .dropdown-menu {
+      position: absolute;
+      top: 50px;
+      right: 12px;
+      background: var(--card-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      width: 220px;
+      display: none;
+      flex-direction: column;
+      z-index: 150;
+      overflow: hidden;
+      animation: fadeIn 0.15s ease-out;
+    }
+
+    .dropdown-menu.active {
+      display: flex;
+    }
+
+    .menu-item {
+      padding: 12px 16px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-main);
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .menu-item:hover {
+      background: var(--border);
+    }
+
+    /* Modal / Popups */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: var(--card-bg);
+      width: 100%;
+      max-width: 500px;
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+      padding: 24px 20px;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+      border-top: 1px solid var(--border);
+    }
+
+    .modal-overlay.active .modal-card {
+      transform: translateY(0);
+    }
+
+    .preview-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .preview-body {
+      background: var(--card-surface);
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 15px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+      word-break: break-word;
+    }
+
+    .modal-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .btn-action {
+      background: var(--card-surface);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 12px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .btn-action.primary {
+      background: var(--accent);
+      color: white;
+      border: none;
+      grid-column: span 3;
+      flex-direction: row;
+      justify-content: center;
+      font-size: 15px;
+    }
+
+    /* Hidden Image Render Canvas Target */
+    #exportCard {
+      position: absolute;
+      left: -9999px;
+      top: -9999px;
+      width: 360px;
+      padding: 24px;
+      background: #111b21;
+      color: #e9edef;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    /* Full Page Drawers */
+    .drawer {
+      position: fixed;
+      top: 0; right: -100%; bottom: 0;
+      width: 100%;
+      background: var(--bg-color);
+      z-index: 180;
+      transition: right 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drawer.active {
+      right: 0;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
   </style>
 </head>
 <body>
 
+<!-- Header -->
 <header>
   <div class="header-left">
-    <button class="back-btn" onclick="location.href='home.html'"><i class="fa-solid fa-arrow-left"></i></button>
+    <button class="icon-btn" onclick="location.href='home.html'"><i class="fa-solid fa-arrow-left"></i></button>
     <div class="title">Notifications</div>
   </div>
-  <button class="back-btn" id="muteToggleBtn" onclick="toggleMute()"><i class="fa-solid fa-bell"></i></button>
+  <div class="header-actions">
+    <button class="icon-btn" title="Archived" onclick="toggleDrawer('archivedDrawer', true)">
+      <i class="fa-solid fa-box-archive"></i>
+    </button>
+    <button class="icon-btn" id="muteToggleBtn" onclick="toggleMute()">
+      <i class="fa-solid fa-bell"></i>
+    </button>
+    <button class="icon-btn" onclick="toggleMoreMenu()">
+      <i class="fa-solid fa-ellipsis-vertical"></i>
+    </button>
+
+    <!-- Dropdown Menu -->
+    <div class="dropdown-menu" id="moreMenu">
+      <button class="menu-item" onclick="toggleDrawer('deletedDrawer', true); toggleMoreMenu();">
+        <i class="fa-solid fa-trash-can" style="color:var(--danger)"></i> Deleted Items
+      </button>
+      <button class="menu-item" onclick="toggleBannerSetting(); toggleMoreMenu();">
+        <i class="fa-solid fa-window-restore" style="color:var(--accent)"></i> 
+        <span id="bannerSettingText">Always Delete Banner</span>
+      </button>
+    </div>
+  </div>
 </header>
 
+<!-- Main List -->
 <div class="list-container" id="notifList">
-  <div style="text-align: center; padding: 40px; color: var(--subtext-color);">
+  <div style="text-align: center; padding: 40px; color: var(--text-sub);">
     <i class="fa-solid fa-spinner fa-spin"></i> Loading notifications...
   </div>
 </div>
 
+<!-- Archived Drawer -->
+<div class="drawer" id="archivedDrawer">
+  <header>
+    <div class="header-left">
+      <button class="icon-btn" onclick="toggleDrawer('archivedDrawer', false)"><i class="fa-solid fa-arrow-left"></i></button>
+      <div class="title">Archived Notifications</div>
+    </div>
+  </header>
+  <div class="list-container" id="archivedList"></div>
+</div>
+
+<!-- Deleted Drawer -->
+<div class="drawer" id="deletedDrawer">
+  <header>
+    <div class="header-left">
+      <button class="icon-btn" onclick="toggleDrawer('deletedDrawer', false)"><i class="fa-solid fa-arrow-left"></i></button>
+      <div class="title">Trash / Deleted</div>
+    </div>
+  </header>
+  <div class="list-container" id="deletedList"></div>
+</div>
+
+<!-- Dynamic Preview Modal -->
+<div class="modal-overlay" id="previewModal">
+  <div class="modal-card">
+    <div class="preview-header">
+      <div class="avatar" id="modalAvatar">U</div>
+      <div>
+        <div class="sender-name" id="modalSender">Sender Name</div>
+        <div class="time" id="modalTime">Just Now</div>
+      </div>
+    </div>
+    <div class="preview-body" id="modalText">
+      Message details will appear here...
+    </div>
+    <div class="modal-actions">
+      <button class="btn-action" onclick="copyActiveMessage()">
+        <i class="fa-solid fa-copy"></i> Copy
+      </button>
+      <button class="btn-action" onclick="shareActiveMessageImage()">
+        <i class="fa-solid fa-share-nodes"></i> Share Image
+      </button>
+      <button class="btn-action" onclick="closePreviewModal()">
+        <i class="fa-solid fa-xmark"></i> Close
+      </button>
+      <button class="btn-action primary" onclick="navigateToChat()">
+        <i class="fa-solid fa-reply"></i> Reply on Chat
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Offscreen Share Image Element -->
+<div id="exportCard">
+  <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+    <div id="expAvatar" class="avatar" style="width:36px; height:36px; font-size:14px;">U</div>
+    <div>
+      <div id="expSender" style="font-weight:700; font-size:14px;">Sender</div>
+      <div id="expTime" style="font-size:10px; color:#8696a0;">Time</div>
+    </div>
+  </div>
+  <div id="expText" style="font-size:14px; line-height:1.4; background:#202c33; padding:12px; border-radius:8px;"></div>
+  <div style="margin-top:12px; text-align:right; font-size:10px; color:#00a884; font-weight:700;">Sent via MessApp</div>
+</div>
+
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -92,7 +525,10 @@
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.database();
+  
   let currentUser = null;
+  let activeNotification = null;
+  let rawNotifications = {};
 
   const savedTheme = localStorage.getItem('messapp_theme');
   if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
@@ -100,62 +536,274 @@
   auth.onAuthStateChanged(user => {
     if (user) {
       currentUser = user;
-      
       window.OneSignalDeferred.push(function(OneSignal) {
         OneSignal.login(user.uid);
       });
-
       updateMuteUI();
-      loadNotifications();
+      initNotificationListener();
     } else {
       window.location.href = 'login.html';
     }
   });
 
-  function loadNotifications() {
-    db.ref(`notifications/${currentUser.uid}`).orderByChild('timestamp').on('value', snapshot => {
-      const container = document.getElementById('notifList');
-      container.innerHTML = '';
-
-      if (!snapshot.exists()) {
-        container.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--subtext-color);">Koi notification nahi hai</div>`;
-        return;
-      }
-
-      let items = [];
-      snapshot.forEach(child => {
-        items.push({ id: child.key, ...child.val() });
-      });
-      items.reverse();
-
-      items.forEach(notif => {
-        const card = document.createElement('div');
-        card.className = `notif-card ${notif.read ? '' : 'unread'}`;
-        
-        const timeStr = new Date(notif.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-        card.innerHTML = `
-          <div class="avatar">${notif.senderName ? notif.senderName.charAt(0) : 'U'}</div>
-          <div class="details">
-            <div class="top-row">
-              <span class="sender-name">${notif.senderName}</span>
-              <span class="time">${timeStr}</span>
-            </div>
-            <div class="msg-preview">${notif.text}</div>
-          </div>
-          ${notif.read ? '' : '<div class="unread-dot"></div>'}
-        `;
-
-        card.onclick = () => {
-          db.ref(`notifications/${currentUser.uid}/${notif.id}`).update({ read: true });
-          const targetUser = { uid: notif.senderUid, fullName: notif.senderName };
-          localStorage.setItem('messapp_active_target', JSON.stringify(targetUser));
-          window.location.href = `chat.html?uid=${notif.senderUid}`;
-        };
-
-        container.appendChild(card);
-      });
+  // Fetch & Synchronize Realtime Data
+  function initNotificationListener() {
+    db.ref(`notifications/${currentUser.uid}`).on('value', snapshot => {
+      rawNotifications = snapshot.val() || {};
+      renderAllViews();
     });
+  }
+
+  function renderAllViews() {
+    const notifContainer = document.getElementById('notifList');
+    const archivedContainer = document.getElementById('archivedList');
+    const deletedContainer = document.getElementById('deletedList');
+
+    notifContainer.innerHTML = '';
+    archivedContainer.innerHTML = '';
+    deletedContainer.innerHTML = '';
+
+    let items = [];
+    Object.keys(rawNotifications).forEach(key => {
+      items.push({ id: key, ...rawNotifications[key] });
+    });
+    items.sort((a,b) => b.timestamp - a.timestamp);
+
+    let activeCount = 0, archiveCount = 0, deleteCount = 0;
+
+    items.forEach(item => {
+      if (item.isDeleted) {
+        deleteCount++;
+        deletedContainer.appendChild(createRestorableCard(item, true));
+      } else if (item.isArchived) {
+        archiveCount++;
+        archivedContainer.appendChild(createRestorableCard(item, false));
+      } else {
+        activeCount++;
+        notifContainer.appendChild(createSwipeableCard(item));
+      }
+    });
+
+    if (activeCount === 0) {
+      notifContainer.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--text-sub);">Koi notification nahi hai</div>`;
+    }
+    if (archiveCount === 0) {
+      archivedContainer.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--text-sub);">Koi archived item nahi hai</div>`;
+    }
+    if (deleteCount === 0) {
+      deletedContainer.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--text-sub);">Trash khali hai</div>`;
+    }
+  }
+
+  // Create Swipeable Notification Item
+  function createSwipeableCard(notif) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'swipe-wrapper';
+
+    const timeStr = new Date(notif.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    wrapper.innerHTML = `
+      <div class="swipe-actions left-actions">
+        <button class="action-btn btn-archive" onclick="archiveItem('${notif.id}')"><i class="fa-solid fa-box-archive"></i>Archive</button>
+        <button class="action-btn btn-copy" onclick="copyText('${escapeQuotes(notif.text)}')"><i class="fa-solid fa-copy"></i>Copy</button>
+      </div>
+      <div class="swipe-actions right-actions">
+        <button class="action-btn btn-delete" onclick="deleteItem('${notif.id}')"><i class="fa-solid fa-trash"></i>Delete</button>
+        <button class="action-btn btn-share" onclick="shareAsImage('${escapeQuotes(notif.senderName)}', '${escapeQuotes(notif.text)}', '${timeStr}')"><i class="fa-solid fa-share"></i>Share</button>
+      </div>
+      <div class="notif-card ${notif.read ? '' : 'unread'}" id="card-${notif.id}">
+        <div class="avatar">${notif.senderName ? notif.senderName.charAt(0).toUpperCase() : 'U'}</div>
+        <div class="details">
+          <div class="top-row">
+            <span class="sender-name">${notif.senderName || 'Unknown'}</span>
+            <span class="time">${timeStr}</span>
+          </div>
+          <div class="msg-preview">${notif.text || ''}</div>
+        </div>
+        ${notif.read ? '' : '<div class="unread-badge"></div>'}
+      </div>
+    `;
+
+    const card = wrapper.querySelector('.notif-card');
+    attachTouchSwipe(card, notif);
+
+    return wrapper;
+  }
+
+  // Cards for Trash & Archive Lists
+  function createRestorableCard(item, isTrash) {
+    const card = document.createElement('div');
+    card.className = 'notif-card';
+    const timeStr = new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    card.innerHTML = `
+      <div class="avatar">${item.senderName ? item.senderName.charAt(0).toUpperCase() : 'U'}</div>
+      <div class="details">
+        <div class="top-row">
+          <span class="sender-name">${item.senderName}</span>
+          <span class="time">${timeStr}</span>
+        </div>
+        <div class="msg-preview">${item.text}</div>
+      </div>
+      <button class="icon-btn" onclick="${isTrash ? `restoreItem('${item.id}')` : `unarchiveItem('${item.id}')`}" title="Restore">
+        <i class="fa-solid fa-rotate-left" style="color:var(--accent)"></i>
+      </button>
+      ${isTrash ? `
+      <button class="icon-btn" onclick="permanentlyDeleteItem('${item.id}')" title="Permanently Delete">
+        <i class="fa-solid fa-xmark" style="color:var(--danger)"></i>
+      </button>` : ''}
+    `;
+    return card;
+  }
+
+  // Touch Swipe Engine (Gestures)
+  function attachTouchSwipe(element, notif) {
+    let startX = 0;
+    let currentX = 0;
+    let isSwiping = false;
+
+    element.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      isSwiping = true;
+      element.style.transition = 'none';
+    }, { passive: true });
+
+    element.addEventListener('touchmove', e => {
+      if (!isSwiping) return;
+      currentX = e.touches[0].clientX - startX;
+      // Limit swipe boundary
+      if (Math.abs(currentX) < 140) {
+        element.style.transform = `translateX(${currentX}px)`;
+      }
+    }, { passive: true });
+
+    element.addEventListener('touchend', () => {
+      if (!isSwiping) return;
+      isSwiping = false;
+      element.style.transition = 'transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28)';
+
+      if (currentX > 80) {
+        element.style.transform = `translateX(130px)`; // Snap Left actions open
+      } else if (currentX < -80) {
+        element.style.transform = `translateX(-130px)`; // Snap Right actions open
+      } else {
+        element.style.transform = `translateX(0px)`; // Reset position
+
+        // Treat as Click/Tap if swipe was tiny
+        if (Math.abs(currentX) < 8) {
+          openPreviewModal(notif);
+        }
+      }
+    });
+  }
+
+  // Action Handlers
+  function archiveItem(id) {
+    db.ref(`notifications/${currentUser.uid}/${id}`).update({ isArchived: true });
+  }
+
+  function unarchiveItem(id) {
+    db.ref(`notifications/${currentUser.uid}/${id}`).update({ isArchived: false });
+  }
+
+  function deleteItem(id) {
+    const alwaysDelete = localStorage.getItem('messapp_always_delete') === 'true';
+    if (alwaysDelete) {
+      permanentlyDeleteItem(id);
+    } else {
+      db.ref(`notifications/${currentUser.uid}/${id}`).update({ isDeleted: true });
+    }
+  }
+
+  function restoreItem(id) {
+    db.ref(`notifications/${currentUser.uid}/${id}`).update({ isDeleted: false, isArchived: false });
+  }
+
+  function permanentlyDeleteItem(id) {
+    db.ref(`notifications/${currentUser.uid}/${id}`).remove();
+  }
+
+  function copyText(text) {
+    navigator.clipboard.writeText(text);
+    alert('Copied to clipboard!');
+  }
+
+  // Modal Preview Handlers
+  function openPreviewModal(notif) {
+    activeNotification = notif;
+    db.ref(`notifications/${currentUser.uid}/${notif.id}`).update({ read: true });
+
+    document.getElementById('modalAvatar').innerText = notif.senderName ? notif.senderName.charAt(0).toUpperCase() : 'U';
+    document.getElementById('modalSender').innerText = notif.senderName || 'Unknown';
+    document.getElementById('modalTime').innerText = new Date(notif.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('modalText').innerText = notif.text;
+
+    document.getElementById('previewModal').classList.add('active');
+  }
+
+  function closePreviewModal() {
+    document.getElementById('previewModal').classList.remove('active');
+    activeNotification = null;
+  }
+
+  function copyActiveMessage() {
+    if (activeNotification) copyText(activeNotification.text);
+  }
+
+  function navigateToChat() {
+    if (!activeNotification) return;
+    const targetUser = { uid: activeNotification.senderUid, fullName: activeNotification.senderName };
+    localStorage.setItem('messapp_active_target', JSON.stringify(targetUser));
+    window.location.href = `chat.html?uid=${activeNotification.senderUid}`;
+  }
+
+  // Image Generation & Native Share
+  async function shareActiveMessageImage() {
+    if (!activeNotification) return;
+    const timeStr = new Date(activeNotification.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    await shareAsImage(activeNotification.senderName, activeNotification.text, timeStr);
+  }
+
+  async function shareAsImage(sender, text, time) {
+    document.getElementById('expAvatar').innerText = sender ? sender.charAt(0).toUpperCase() : 'U';
+    document.getElementById('expSender').innerText = sender;
+    document.getElementById('expTime').innerText = time;
+    document.getElementById('expText').innerText = text;
+
+    const target = document.getElementById('exportCard');
+    try {
+      const canvas = await html2canvas(target, { backgroundColor: null, scale: 2 });
+      canvas.toBlob(async blob => {
+        const file = new File([blob], 'notification.png', { type: 'image/png' });
+        if (navigator.share && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: 'Share Notification',
+            text: 'Shared from MessApp'
+          });
+        } else {
+          // Fallback Download
+          const link = document.createElement('a');
+          link.download = 'notification.png';
+          link.href = canvas.toDataURL();
+          link.click();
+        }
+      });
+    } catch (err) {
+      alert('Error generating image share!');
+    }
+  }
+
+  // UI Toggles & Controls
+  function toggleMoreMenu() {
+    const menu = document.getElementById('moreMenu');
+    menu.classList.toggle('active');
+  }
+
+  function toggleDrawer(id, open) {
+    const drawer = document.getElementById(id);
+    if (open) drawer.classList.add('active');
+    else drawer.classList.remove('active');
   }
 
   function toggleMute() {
@@ -167,8 +815,33 @@
   function updateMuteUI() {
     const isMuted = localStorage.getItem('messapp_muted') === 'true';
     const btn = document.getElementById('muteToggleBtn');
-    btn.innerHTML = isMuted ? '<i class="fa-solid fa-bell-slash" style="color: #f44336;"></i>' : '<i class="fa-solid fa-bell"></i>';
+    btn.innerHTML = isMuted ? '<i class="fa-solid fa-bell-slash" style="color: var(--danger);"></i>' : '<i class="fa-solid fa-bell"></i>';
   }
+
+  function toggleBannerSetting() {
+    const current = localStorage.getItem('messapp_always_delete') === 'true';
+    localStorage.setItem('messapp_always_delete', !current);
+    updateBannerText();
+    alert(!current ? 'Always Permanent Delete enabled!' : 'Move to Trash enabled!');
+  }
+
+  function updateBannerText() {
+    const current = localStorage.getItem('messapp_always_delete') === 'true';
+    document.getElementById('bannerSettingText').innerText = current ? 'Disable Permanent Delete' : 'Always Delete Banner';
+  }
+
+  function escapeQuotes(str) {
+    return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  }
+
+  // Global click to dismiss menus
+  window.addEventListener('click', e => {
+    if (!e.target.closest('.header-actions')) {
+      document.getElementById('moreMenu').classList.remove('active');
+    }
+  });
+
+  updateBannerText();
 </script>
 </body>
 </html>
