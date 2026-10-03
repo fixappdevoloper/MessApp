@@ -2,11 +2,16 @@
 <html lang="hi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>MessApp - Home</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <!-- OneSignal Web Push SDK -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Canvas Library for Image Sharing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <!-- OneSignal SDK -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -19,71 +24,362 @@
 
   <style>
     :root {
-      --bg-color: #111b21;
-      --card-bg: #202c33;
-      --text-color: #e9edef;
-      --subtext-color: #8696a0;
-      --border-color: #222d34;
-      --accent-color: #00a884;
-      --hover-bg: #1f2c34;
+      --bg-color: #0b141a;
+      --card-bg: #111b21;
+      --card-surface: #202c33;
+      --text-main: #e9edef;
+      --text-sub: #8696a0;
+      --accent: #00a884;
+      --danger: #f44336;
+      --info: #2196f3;
+      --like: #e91e63;
+      --purple: #9c27b0;
+      --border: rgba(255, 255, 255, 0.08);
+      --glass: rgba(17, 27, 33, 0.85);
     }
 
     [data-theme="light"] {
-      --bg-color: #ffffff;
-      --card-bg: #f0f2f5;
-      --text-color: #111b21;
-      --subtext-color: #667781;
-      --border-color: #e9edef;
-      --accent-color: #008069;
-      --hover-bg: #f5f6f6;
+      --bg-color: #f0f2f5;
+      --card-bg: #ffffff;
+      --card-surface: #f7f9fa;
+      --text-main: #111b21;
+      --text-sub: #667781;
+      --accent: #008069;
+      --danger: #d32f2f;
+      --border: rgba(0, 0, 0, 0.08);
+      --glass: rgba(255, 255, 255, 0.85);
     }
 
-    * { box-sizing: border-box; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; margin: 0; padding: 0; transition: background 0.2s, color 0.2s; }
-    body { background-color: var(--bg-color); color: var(--text-color); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    * {
+      box-sizing: border-box;
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-    header { background: var(--card-bg); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
-    .app-brand { font-size: 22px; font-weight: 800; color: var(--accent-color); letter-spacing: 0.5px; }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
 
-    .header-actions { display: flex; align-items: center; gap: 14px; }
-    .icon-btn { background: transparent; border: none; color: var(--subtext-color); font-size: 18px; cursor: pointer; padding: 6px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; }
-    .icon-btn:hover { background: rgba(255,255,255,0.08); color: var(--text-color); }
+    /* Animated Avatar Engine */
+    .avatar-animated {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+      color: #ffffff;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, #ff007f, #7f00ff, #00f0ff, #00a884);
+      background-size: 300% 300%;
+      animation: gradientShift 6s ease infinite, avatarPulse 2s ease-in-out infinite alternate;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
 
-    .tabs-bar { display: flex; background: var(--card-bg); border-bottom: 1px solid var(--border-color); }
-    .tab-item { flex: 1; text-align: center; padding: 14px 0; font-size: 15px; font-weight: 600; color: var(--subtext-color); cursor: pointer; border-bottom: 3px solid transparent; position: relative; }
-    .tab-item.active { color: var(--accent-color); border-bottom-color: var(--accent-color); }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
 
-    .main-container { flex: 1; overflow-y: auto; background: var(--bg-color); }
-    
-    .list-view { display: none; }
-    .list-view.active { display: block; }
+    @keyframes avatarPulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.03); }
+    }
 
-    .user-card { display: flex; align-items: center; padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border-color); position: relative; }
-    .user-card:hover { background: var(--hover-bg); }
-    
-    .avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--accent-color); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; text-transform: uppercase; flex-shrink: 0; }
-    
-    .user-details { margin-left: 14px; flex: 1; overflow: hidden; }
-    .user-details .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-    .user-details .name { font-weight: 700; font-size: 16px; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .user-details .time { font-size: 12px; color: var(--subtext-color); }
-    .user-details .last-msg { font-size: 13px; color: var(--subtext-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* Header Styling */
+    header {
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
 
-    .badge { background: var(--accent-color); color: white; border-radius: 10px; padding: 2px 7px; font-size: 11px; font-weight: bold; margin-left: 6px; }
-    .notif-badge { position: absolute; top: 2px; right: 2px; background: #f44336; color: white; border-radius: 50%; width: 10px; height: 10px; display: none; }
+    .app-brand {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+    }
 
-    .offline-banner { background: #e53935; color: white; font-size: 12px; text-align: center; padding: 4px; display: none; font-weight: bold; }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-sub);
+      font-size: 18px;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .icon-btn:active {
+      background: var(--border);
+    }
+
+    .account-dp {
+      width: 36px;
+      height: 36px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    /* Tabs Bar */
+    .tabs-bar {
+      display: flex;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-item {
+      flex: 1;
+      text-align: center;
+      padding: 14px 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-sub);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.25s ease;
+    }
+
+    .tab-item.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* Main Content Area */
+    .main-container {
+      flex: 1;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .list-view {
+      display: none;
+    }
+
+    .list-view.active {
+      display: block;
+    }
+
+    /* Swipeable List Card Structure */
+    .swipe-wrapper {
+      position: relative;
+      overflow: hidden;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .swipe-actions {
+      position: absolute;
+      top: 0; bottom: 0;
+      display: flex;
+      align-items: center;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .swipe-actions.left-actions { left: 0; }
+    .swipe-actions.right-actions { right: 0; flex-direction: row-reverse; }
+
+    .action-btn {
+      width: 60px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-share { background-color: var(--purple); }
+    .btn-like { background-color: var(--like); }
+    .btn-archive { background-color: var(--accent); }
+    .btn-remove { background-color: var(--danger); }
+
+    .user-card {
+      position: relative;
+      background: var(--card-bg);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 2;
+      transition: transform 0.2s ease-out;
+      user-select: none;
+    }
+
+    .user-details {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .name {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--text-main);
+    }
+
+    .time {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    .last-msg-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .last-msg {
+      font-size: 13px;
+      color: var(--text-sub);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 80%;
+    }
+
+    /* Red Animated Badge */
+    .unread-badge-red {
+      background: #ff2a5f;
+      color: white;
+      border-radius: 12px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      box-shadow: 0 0 10px rgba(255, 42, 95, 0.6);
+      animation: badgePulse 1.5s infinite;
+    }
+
+    @keyframes badgePulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 42, 95, 0.7); }
+      70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(255, 42, 95, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 42, 95, 0); }
+    }
+
+    /* Address Slider for All Users */
+    .address-ticker-container {
+      height: 18px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .address-ticker {
+      display: flex;
+      flex-direction: column;
+      animation: slideAddress 6s infinite ease-in-out;
+    }
+
+    .address-line {
+      font-size: 12px;
+      color: var(--text-sub);
+      white-space: nowrap;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    @keyframes slideAddress {
+      0%, 30% { transform: translateY(0); }
+      35%, 65% { transform: translateY(-18px); }
+      70%, 100% { transform: translateY(-36px); }
+    }
+
+    /* Offline Banner */
+    .offline-banner {
+      background: #e53935;
+      color: white;
+      font-size: 12px;
+      text-align: center;
+      padding: 6px;
+      font-weight: 700;
+      display: none;
+    }
+
+    /* Full Drawers */
+    .drawer {
+      position: fixed;
+      top: 0; right: -100%; bottom: 0;
+      width: 100%;
+      background: var(--bg-color);
+      z-index: 180;
+      transition: right 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drawer.active { right: 0; }
+
+    /* Hidden Export Element */
+    #exportHomeCard {
+      position: absolute;
+      left: -9999px;
+      top: -9999px;
+      width: 320px;
+      padding: 20px;
+      background: #111b21;
+      color: #e9edef;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
   </style>
 </head>
 <body>
 
-<div class="offline-banner" id="offlineBanner"><i class="fa-solid fa-wifi"></i> Offline Mode - Showing cached data</div>
+<div class="offline-banner" id="offlineBanner">
+  <i class="fa-solid fa-wifi"></i> Offline Mode - Cached Data Displayed
+</div>
 
+<!-- Header -->
 <header>
   <div class="app-brand">MessApp</div>
   <div class="header-actions">
+    <button class="icon-btn" title="Archived Chats" onclick="toggleDrawer('archivedDrawer', true)">
+      <i class="fa-solid fa-box-archive"></i>
+    </button>
     <button class="icon-btn" onclick="location.href='notification.html'" title="Notifications">
       <i class="fa-solid fa-bell"></i>
-      <span class="notif-badge" id="globalNotifBadge"></span>
+      <span id="globalNotifDot" style="position:absolute; top:8px; right:8px; width:8px; height:8px; background:var(--danger); border-radius:50%; display:none;"></span>
     </button>
     <button class="icon-btn" onclick="location.href='search.html'" title="Search Users">
       <i class="fa-solid fa-magnifying-glass"></i>
@@ -91,31 +387,58 @@
     <button class="icon-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
       <i class="fa-solid fa-moon"></i>
     </button>
-    <button class="icon-btn" id="logoutBtn" title="Logout">
-      <i class="fa-solid fa-right-from-bracket"></i>
-    </button>
+    <!-- Account DP Action Redirects to account.html -->
+    <div class="avatar-animated account-dp" id="accountDp" title="My Account" onclick="handleAccountClick()">
+      U
+    </div>
   </div>
 </header>
 
+<!-- Tabs Navigation -->
 <div class="tabs-bar">
   <div class="tab-item active" id="tabChats" onclick="switchTab('chats')">CHATS</div>
   <div class="tab-item" id="tabAll" onclick="switchTab('all')">ALL USERS</div>
 </div>
 
+<!-- Main Section -->
 <div class="main-container">
   <div class="list-view active" id="chatsView">
-    <div style="text-align: center; padding: 40px 20px; color: var(--subtext-color);" id="chatsLoader">
+    <div style="text-align: center; padding: 40px; color: var(--text-sub);">
       <i class="fa-solid fa-circle-notch fa-spin"></i> Loading recent chats...
     </div>
   </div>
 
   <div class="list-view" id="allUsersView">
-    <div style="text-align: center; padding: 40px 20px; color: var(--subtext-color);" id="allLoader">
-      <i class="fa-solid fa-circle-notch fa-spin"></i> Loading all contacts...
+    <div style="text-align: center; padding: 40px; color: var(--text-sub);">
+      <i class="fa-solid fa-circle-notch fa-spin"></i> Discovering users...
     </div>
   </div>
 </div>
 
+<!-- Archived Drawer -->
+<div class="drawer" id="archivedDrawer">
+  <header>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button class="icon-btn" onclick="toggleDrawer('archivedDrawer', false)"><i class="fa-solid fa-arrow-left"></i></button>
+      <div style="font-weight: 700; font-size: 18px;">Archived Chats</div>
+    </div>
+  </header>
+  <div class="main-container" id="archivedList"></div>
+</div>
+
+<!-- Offscreen Image Exporter Target -->
+<div id="exportHomeCard">
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+    <div id="expAvatar" class="avatar-animated" style="width:40px; height:40px; font-size:16px;">U</div>
+    <div>
+      <div id="expName" style="font-weight:700; font-size:15px;">User Name</div>
+      <div id="expTime" style="font-size:11px; color:#8696a0;">MessApp User</div>
+    </div>
+  </div>
+  <div id="expDetail" style="font-size:13px; color:#8696a0; background:#202c33; padding:10px; border-radius:8px;"></div>
+</div>
+
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -138,9 +461,16 @@
   let currentUser = null;
   let allUsersMap = {};
 
-  initTheme();
-  requestNotificationPermission();
+  const sampleLocations = [
+    { city: "New Delhi", state: "Delhi", country: "🇮🇳 India" },
+    { city: "Mumbai", state: "Maharashtra", country: "🇮🇳 India" },
+    { city: "London", state: "England", country: "🇬🇧 United Kingdom" },
+    { city: "New York", state: "NY", country: "🇺🇸 United States" },
+    { city: "Tokyo", state: "Kanto", country: "🇯🇵 Japan" },
+    { city: "Berlin", state: "Brandenburg", country: "🇩🇪 Germany" }
+  ];
 
+  initTheme();
   window.addEventListener('online', updateOnlineStatus);
   window.addEventListener('offline', updateOnlineStatus);
 
@@ -148,24 +478,20 @@
     document.getElementById('offlineBanner').style.display = navigator.onLine ? 'none' : 'block';
   }
 
-  function requestNotificationPermission() {
-    if ("Notification" in window && Notification.permission !== "granted") {
-      Notification.requestPermission();
-    }
-  }
-
   auth.onAuthStateChanged(user => {
     if (user) {
       currentUser = user;
       localStorage.setItem('messapp_current_uid', user.uid);
       
-      // User External ID set for OneSignal targeted push notifications
+      const userLetter = (user.displayName || user.email || 'U').charAt(0).toUpperCase();
+      document.getElementById('accountDp').innerText = userLetter;
+
       window.OneSignalDeferred.push(function(OneSignal) {
         OneSignal.login(user.uid);
       });
 
-      loadAllUsersData();
-      listenForNotifications();
+      loadUsersData();
+      listenForGlobalNotifs();
     } else {
       localStorage.removeItem('messapp_current_uid');
       window.location.href = 'login.html';
@@ -177,14 +503,18 @@
     document.getElementById('tabAll').classList.toggle('active', tabName === 'all');
     document.getElementById('chatsView').classList.toggle('active', tabName === 'chats');
     document.getElementById('allUsersView').classList.toggle('active', tabName === 'all');
+
+    if (tabName === 'all') {
+      renderAllUsersList();
+    }
   }
 
-  function loadAllUsersData() {
-    const cachedUsers = localStorage.getItem('messapp_cached_users');
-    if (cachedUsers) {
-      allUsersMap = JSON.parse(cachedUsers);
+  function loadUsersData() {
+    const cached = localStorage.getItem('messapp_cached_users');
+    if (cached) {
+      allUsersMap = JSON.parse(cached);
       renderAllUsersList();
-      loadRecentChats();
+      listenForChats();
     }
 
     if (navigator.onLine) {
@@ -196,7 +526,7 @@
         });
         localStorage.setItem('messapp_cached_users', JSON.stringify(allUsersMap));
         renderAllUsersList();
-        loadRecentChats();
+        listenForChats();
       });
     }
   }
@@ -204,33 +534,51 @@
   function renderAllUsersList() {
     const container = document.getElementById('allUsersView');
     container.innerHTML = '';
-    const userList = Object.values(allUsersMap).filter(u => u.uid !== currentUser.uid);
+
+    let userList = Object.values(allUsersMap).filter(u => u.uid !== currentUser.uid);
 
     if (userList.length === 0) {
-      container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--subtext-color);">Koi user nahi mila</div>`;
+      container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-sub);">No users found</div>`;
       return;
     }
 
-    userList.forEach(user => {
-      const card = document.createElement('div');
-      card.className = 'user-card';
-      card.onclick = () => openChatPage(user);
-      card.innerHTML = `
-        <div class="avatar">${user.fullName ? user.fullName.charAt(0) : 'U'}</div>
-        <div class="user-details">
-          <div class="top-row">
-            <div class="name">${user.fullName}</div>
+    for (let i = userList.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [userList[i], userList[j]] = [userList[j], userList[i]];
+    }
+
+    userList.forEach((user, idx) => {
+      const loc = sampleLocations[idx % sampleLocations.length];
+      const wrapper = document.createElement('div');
+      wrapper.className = 'swipe-wrapper';
+
+      wrapper.innerHTML = `
+        <div class="user-card" onclick="openChatPage('${user.uid}')">
+          <div class="avatar-animated">${user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}</div>
+          <div class="user-details">
+            <div class="top-row">
+              <div class="name">${user.fullName || 'User'}</div>
+              <div class="time">@${user.username || 'user'}</div>
+            </div>
+            <div class="address-ticker-container">
+              <div class="address-ticker">
+                <div class="address-line"><i class="fa-solid fa-location-dot" style="color:var(--accent)"></i> ${loc.city}, ${loc.state}</div>
+                <div class="address-line"><i class="fa-solid fa-globe" style="color:var(--info)"></i> ${loc.country}</div>
+                <div class="address-line"><i class="fa-solid fa-comments" style="color:var(--purple)"></i> Tap to start conversation</div>
+              </div>
+            </div>
           </div>
-          <div class="last-msg">@${user.username || 'user'} • MessApp</div>
         </div>
       `;
-      container.appendChild(card);
+      container.appendChild(wrapper);
     });
   }
 
-  function loadRecentChats() {
+  function listenForChats() {
     db.ref('chats').on('value', snapshot => {
       const recentChatUsers = [];
+      const hiddenChats = JSON.parse(localStorage.getItem('messapp_hidden_chats') || '{}');
+      const archivedChats = JSON.parse(localStorage.getItem('messapp_archived_chats') || '{}');
 
       snapshot.forEach(roomSnap => {
         const roomId = roomSnap.key;
@@ -253,102 +601,206 @@
             }
           });
 
+          if (hiddenChats[partnerUid] && lastTime > hiddenChats[partnerUid]) {
+            delete hiddenChats[partnerUid];
+            localStorage.setItem('messapp_hidden_chats', JSON.stringify(hiddenChats));
+          }
+
           if (allUsersMap[partnerUid]) {
             recentChatUsers.push({
               user: allUsersMap[partnerUid],
               lastMsg: lastMsg,
               timestamp: lastTime,
-              unreadCount: unreadCount
+              unreadCount: unreadCount,
+              isHidden: !!hiddenChats[partnerUid],
+              isArchived: !!archivedChats[partnerUid]
             });
           }
         }
       });
 
       recentChatUsers.sort((a, b) => b.timestamp - a.timestamp);
-      renderRecentChatsUI(recentChatUsers);
+      renderChatsUI(recentChatUsers);
     });
   }
 
-  function renderRecentChatsUI(recentList) {
+  function renderChatsUI(recentList) {
     const container = document.getElementById('chatsView');
-    container.innerHTML = '';
+    const archivedContainer = document.getElementById('archivedList');
 
-    if (recentList.length === 0) {
+    container.innerHTML = '';
+    archivedContainer.innerHTML = '';
+
+    const activeChats = recentList.filter(item => !item.isHidden && !item.isArchived);
+    const archivedChats = recentList.filter(item => item.isArchived);
+
+    if (activeChats.length === 0) {
       container.innerHTML = `
-        <div style="text-align:center; padding:50px 20px; color:var(--subtext-color);">
+        <div style="text-align:center; padding:50px 20px; color:var(--text-sub);">
           <i class="fa-regular fa-comments" style="font-size:40px; margin-bottom:12px;"></i><br>
-          Koi purani chat nahi hai.<br>
-          <span style="color:var(--accent-color); cursor:pointer;" onclick="switchTab('all')">All Users</span> me se select karke chat shuru karein.
+          No active conversations.<br>
+          <span style="color:var(--accent); cursor:pointer; font-weight:700;" onclick="switchTab('all')">Browse All Users</span> to start chatting.
         </div>`;
-      return;
+    } else {
+      activeChats.forEach(item => container.appendChild(createSwipeableChatCard(item)));
     }
 
-    recentList.forEach(item => {
-      const user = item.user;
-      const card = document.createElement('div');
-      card.className = 'user-card';
-      card.onclick = () => openChatPage(user);
+    if (archivedChats.length === 0) {
+      archivedContainer.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-sub);">No archived chats</div>`;
+    } else {
+      archivedChats.forEach(item => archivedContainer.appendChild(createSwipeableChatCard(item, true)));
+    }
+  }
 
-      const formattedTime = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+  function createSwipeableChatCard(item, isArchivedView = false) {
+    const user = item.user;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'swipe-wrapper';
 
-      card.innerHTML = `
-        <div class="avatar">${user.fullName ? user.fullName.charAt(0) : 'U'}</div>
+    const formattedTime = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+    wrapper.innerHTML = `
+      <div class="swipe-actions left-actions">
+        <button class="action-btn btn-share" onclick="shareUserAsImage('${escapeQuotes(user.fullName)}', '${escapeQuotes(item.lastMsg)}')"><i class="fa-solid fa-share"></i>Share</button>
+        <button class="action-btn btn-like" onclick="likeUser('${user.uid}')"><i class="fa-solid fa-heart"></i>Like</button>
+      </div>
+      <div class="swipe-actions right-actions">
+        <button class="action-btn btn-remove" onclick="removeChatFromMain('${user.uid}')"><i class="fa-solid fa-eye-slash"></i>Hide</button>
+        <button class="action-btn btn-archive" onclick="toggleArchiveChat('${user.uid}')"><i class="fa-solid fa-box-archive"></i>${isArchivedView ? 'Unarchive' : 'Archive'}</button>
+      </div>
+      <div class="user-card">
+        <div class="avatar-animated">${user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}</div>
         <div class="user-details">
           <div class="top-row">
-            <div class="name">${user.fullName}</div>
+            <div class="name">${user.fullName || 'User'}</div>
             <div class="time">${formattedTime}</div>
           </div>
-          <div class="last-msg" style="display:flex; justify-content:space-between; align-items:center;">
-            <span>${item.lastMsg || 'Tap to chat'}</span>
-            ${item.unreadCount > 0 ? `<span class="badge">${item.unreadCount}</span>` : ''}
+          <div class="last-msg-row">
+            <div class="last-msg">${item.lastMsg || 'Tap to chat'}</div>
+            ${item.unreadCount > 0 ? `<div class="unread-badge-red">${item.unreadCount}</div>` : ''}
           </div>
         </div>
-      `;
-      container.appendChild(card);
+      </div>
+    `;
+
+    const card = wrapper.querySelector('.user-card');
+    attachTouchSwipe(card, user);
+
+    return wrapper;
+  }
+
+  function attachTouchSwipe(element, targetUser) {
+    let startX = 0;
+    let currentX = 0;
+    let isSwiping = false;
+
+    element.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      isSwiping = true;
+      element.style.transition = 'none';
+    }, { passive: true });
+
+    element.addEventListener('touchmove', e => {
+      if (!isSwiping) return;
+      currentX = e.touches[0].clientX - startX;
+      if (Math.abs(currentX) < 140) {
+        element.style.transform = `translateX(${currentX}px)`;
+      }
+    }, { passive: true });
+
+    element.addEventListener('touchend', () => {
+      if (!isSwiping) return;
+      isSwiping = false;
+      element.style.transition = 'transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28)';
+
+      if (currentX > 80) {
+        element.style.transform = `translateX(120px)`;
+      } else if (currentX < -80) {
+        element.style.transform = `translateX(-120px)`;
+      } else {
+        element.style.transform = `translateX(0px)`;
+        if (Math.abs(currentX) < 8) {
+          openChatPage(targetUser.uid);
+        }
+      }
     });
   }
 
-  function listenForNotifications() {
-    db.ref(`notifications/${currentUser.uid}`).on('value', snapshot => {
-      let hasUnread = false;
-      snapshot.forEach(child => {
-        const notif = child.val();
-        if (!notif.read) {
-          hasUnread = true;
-          if (localStorage.getItem('messapp_muted') !== 'true' && notif.timestamp > (Date.now() - 5000)) {
-            triggerSystemNotification(notif);
-          }
+  function removeChatFromMain(targetUid) {
+    const hidden = JSON.parse(localStorage.getItem('messapp_hidden_chats') || '{}');
+    hidden[targetUid] = Date.now();
+    localStorage.setItem('messapp_hidden_chats', JSON.stringify(hidden));
+    listenForChats();
+  }
+
+  function toggleArchiveChat(targetUid) {
+    const archived = JSON.parse(localStorage.getItem('messapp_archived_chats') || '{}');
+    if (archived[targetUid]) delete archived[targetUid];
+    else archived[targetUid] = true;
+    localStorage.setItem('messapp_archived_chats', JSON.stringify(archived));
+    listenForChats();
+  }
+
+  function likeUser(targetUid) {
+    alert('You liked this chat!');
+  }
+
+  async function shareUserAsImage(name, msg) {
+    document.getElementById('expAvatar').innerText = name ? name.charAt(0).toUpperCase() : 'U';
+    document.getElementById('expName').innerText = name;
+    document.getElementById('expDetail').innerText = msg || 'Connected on MessApp';
+
+    const target = document.getElementById('exportHomeCard');
+    try {
+      const canvas = await html2canvas(target, { backgroundColor: null, scale: 2 });
+      canvas.toBlob(async blob => {
+        const file = new File([blob], 'chat_contact.png', { type: 'image/png' });
+        if (navigator.share && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: name, text: 'Shared from MessApp' });
+        } else {
+          const link = document.createElement('a');
+          link.download = 'chat_contact.png';
+          link.href = canvas.toDataURL();
+          link.click();
         }
       });
-      document.getElementById('globalNotifBadge').style.display = hasUnread ? 'block' : 'none';
-    });
-  }
-
-  function triggerSystemNotification(notif) {
-    if ("Notification" in window && Notification.permission === "granted") {
-      const sysNotif = new Notification(`${notif.senderName} ne message kiya`, {
-        body: notif.text,
-        icon: 'https://cdn-icons-png.flaticon.com/512/732/732200.png'
-      });
-      sysNotif.onclick = () => {
-        window.focus();
-        location.href = 'notification.html';
-      };
+    } catch (e) {
+      alert('Error sharing image card!');
     }
   }
 
-  function openChatPage(targetUser) {
-    localStorage.setItem('messapp_active_target', JSON.stringify(targetUser));
-    window.location.href = `chat.html?uid=${targetUser.uid}`;
+  function openChatPage(targetUid) {
+    const targetUser = allUsersMap[targetUid];
+    if (targetUser) {
+      localStorage.setItem('messapp_active_target', JSON.stringify(targetUser));
+      window.location.href = `chat.html?uid=${targetUid}`;
+    }
+  }
+
+  // Directly Opens account.html without Logout Prompt
+  function handleAccountClick() {
+    window.location.href = 'account.html';
+  }
+
+  function listenForGlobalNotifs() {
+    db.ref(`notifications/${currentUser.uid}`).on('value', snapshot => {
+      let hasUnread = false;
+      snapshot.forEach(c => {
+        if (!c.val().read) hasUnread = true;
+      });
+      document.getElementById('globalNotifDot').style.display = hasUnread ? 'block' : 'none';
+    });
+  }
+
+  function toggleDrawer(id, open) {
+    document.getElementById(id).classList.toggle('active', open);
   }
 
   function initTheme() {
     const savedTheme = localStorage.getItem('messapp_theme');
-    const themeBtn = document.getElementById('themeToggleBtn');
-
     if (savedTheme) {
       document.documentElement.setAttribute('data-theme', savedTheme);
-      themeBtn.innerHTML = savedTheme === 'light' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+      document.getElementById('themeToggleBtn').innerHTML = savedTheme === 'light' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
     }
   }
 
@@ -360,12 +812,9 @@
     document.getElementById('themeToggleBtn').innerHTML = newTheme === 'light' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
   }
 
-  document.getElementById('logoutBtn').addEventListener('click', () => {
-    auth.signOut().then(() => {
-      localStorage.clear();
-      window.location.href = 'login.html';
-    });
-  });
+  function escapeQuotes(str) {
+    return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  }
 </script>
 </body>
 </html>
