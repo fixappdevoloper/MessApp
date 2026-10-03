@@ -2,221 +2,602 @@
 <html lang="hi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MessApp - Welcome</title>
-  <!-- Font Awesome Icons -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MessApp - The Ultimate Modern Messaging Experience</title>
+
+  <!-- Font Awesome Icons & Google Fonts -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
   <style>
     :root {
-      --bg-color: #f8fafc;
-      --card-bg: #ffffff;
-      --text-color: #0f172a;
-      --subtext-color: #64748b;
-      --accent-color: #008069;
-      --accent-gradient: linear-gradient(135deg, #00a884, #008069);
+      --bg-color: #0b141a;
+      --card-bg: #111b21;
+      --card-surface: #202c33;
+      --text-main: #e9edef;
+      --text-sub: #8696a0;
+      --accent: #00a884;
+      --accent-glow: rgba(0, 168, 132, 0.35);
+      --purple: #9c27b0;
+      --like: #e91e63;
+      --border: rgba(255, 255, 255, 0.08);
+      --glass: rgba(17, 27, 33, 0.85);
+      --hero-grad: linear-gradient(135deg, #111b21 0%, #0b141a 100%);
     }
 
-    /* System Light Theme Alignment */
-    [data-theme="dark"] {
-      --bg-color: #0f172a;
-      --card-bg: #1e293b;
-      --text-color: #f8fafc;
-      --subtext-color: #94a3b8;
+    [data-theme="light"] {
+      --bg-color: #f0f2f5;
+      --card-bg: #ffffff;
+      --card-surface: #f7f9fa;
+      --text-main: #111b21;
+      --text-sub: #667781;
+      --accent: #008069;
+      --accent-glow: rgba(0, 128, 105, 0.2);
+      --border: rgba(0, 0, 0, 0.08);
+      --glass: rgba(255, 255, 255, 0.85);
+      --hero-grad: linear-gradient(135deg, #ffffff 0%, #f0f2f5 100%);
     }
 
     * {
       box-sizing: border-box;
-      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
       margin: 0;
       padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
     body {
       background-color: var(--bg-color);
-      color: var(--text-color);
-      height: 100vh;
-      width: 100vw;
+      color: var(--text-main);
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Animated Avatar Engine */
+    .avatar-animated {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 18px;
+      color: #ffffff;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, #ff007f, #7f00ff, #00f0ff, #00a884);
+      background-size: 300% 300%;
+      animation: gradientShift 6s ease infinite, avatarPulse 2s ease-in-out infinite alternate;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes avatarPulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.04); }
+    }
+
+    /* Navbar */
+    header {
+      position: sticky;
+      top: 0;
+      background: var(--glass);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 14px 24px;
+      display: flex;
       justify-content: space-between;
       align-items: center;
-      overflow: hidden;
-      padding: 40px 20px;
-      transition: opacity 0.5s ease-out;
+      border-bottom: 1px solid var(--border);
+      z-index: 1000;
     }
 
-    /* Fade-out effect before redirecting */
-    body.fade-out {
-      opacity: 0;
-    }
-
-    /* Main Branding Container */
-    .brand-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-    }
-
-    /* Glowing Logo Icon Wrapper */
-    .logo-wrapper {
-      position: relative;
-      width: 90px;
-      height: 90px;
-      background: var(--accent-gradient);
-      border-radius: 26px;
+    .app-brand {
       display: flex;
       align-items: center;
-      justify-content: center;
-      box-shadow: 0 12px 30px rgba(0, 168, 132, 0.25);
-      animation: pulseGlow 2s infinite alternate ease-in-out;
-      margin-bottom: 24px;
-    }
-
-    .logo-wrapper i {
-      font-size: 42px;
-      color: #ffffff;
-    }
-
-    /* Pulse Glow Animation */
-    @keyframes pulseGlow {
-      0% {
-        transform: scale(0.98);
-        box-shadow: 0 8px 20px rgba(0, 168, 132, 0.2);
-      }
-      100% {
-        transform: scale(1.05);
-        box-shadow: 0 16px 36px rgba(0, 168, 132, 0.4);
-      }
-    }
-
-    .app-title {
-      font-size: 32px;
+      gap: 10px;
+      font-size: 24px;
       font-weight: 800;
+      color: var(--accent);
       letter-spacing: -0.5px;
-      color: var(--text-color);
-      margin-bottom: 8px;
+      text-decoration: none;
     }
 
-    .app-tagline {
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--subtext-color);
-      letter-spacing: 0.2px;
+    .app-brand i {
+      font-size: 26px;
     }
 
-    /* Footer / Progress Bar Section */
-    .footer-container {
-      width: 100%;
-      max-width: 260px;
+    .nav-actions {
       display: flex;
-      flex-direction: column;
       align-items: center;
-      gap: 16px;
-      margin-bottom: 20px;
+      gap: 12px;
     }
 
-    /* Premium Progress Bar */
-    .progress-bar-bg {
-      width: 100%;
-      height: 4px;
-      background-color: rgba(0, 0, 0, 0.08);
-      border-radius: 10px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .progress-bar-fill {
-      width: 0%;
-      height: 100%;
-      background: var(--accent-gradient);
-      border-radius: 10px;
-      animation: fillProgress 3s linear forwards;
-    }
-
-    @keyframes fillProgress {
-      0% { width: 0%; }
-      100% { width: 100%; }
-    }
-
-    /* Secured Badge */
-    .security-tag {
-      font-size: 12px;
+    .theme-select-btn {
+      background: var(--card-surface);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-size: 13px;
       font-weight: 600;
-      color: var(--subtext-color);
+      cursor: pointer;
       display: flex;
       align-items: center;
       gap: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
     }
 
-    .security-tag i {
-      color: var(--accent-color);
-    }
-
-    /* Direct Redirect Button (Fallback) */
-    .skip-btn {
-      background: transparent;
+    .btn {
+      padding: 9px 18px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
       border: none;
-      color: var(--accent-color);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text-main);
+      border: 1px solid var(--border);
+    }
+
+    .btn-outline:hover {
+      background: var(--border);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 4px 14px var(--accent-glow);
+    }
+
+    .btn-primary:hover {
+      opacity: 0.95;
+    }
+
+    /* Auth User State Box */
+    .user-profile-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--card-surface);
+      padding: 6px 14px 6px 6px;
+      border-radius: 30px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+    }
+
+    .user-profile-info {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+
+    .user-profile-info .u-name {
       font-size: 13px;
       font-weight: 700;
-      cursor: pointer;
-      margin-top: 4px;
-      text-decoration: underline;
+      color: var(--text-main);
+    }
+
+    .user-profile-info .u-tag {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    /* Hero Section */
+    .hero-section {
+      background: var(--hero-grad);
+      padding: 60px 20px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 168, 132, 0.12);
+      color: var(--accent);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      border: 1px solid rgba(0, 168, 132, 0.25);
+    }
+
+    .hero-title {
+      font-size: 42px;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 16px;
+      max-width: 750px;
+      letter-spacing: -1px;
+    }
+
+    .hero-title span {
+      background: linear-gradient(135deg, #00a884, #00f0ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 16px;
+      color: var(--text-sub);
+      max-width: 580px;
+      line-height: 1.6;
+      margin-bottom: 36px;
+    }
+
+    .start-messenger-box {
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .btn-start-hero {
+      padding: 16px 28px;
+      font-size: 18px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #00a884 0%, #008069 100%);
+      color: white;
+      font-weight: 800;
+      box-shadow: 0 8px 24px var(--accent-glow);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .btn-start-hero:hover {
+      transform: translateY(-2px);
+    }
+
+    /* App Preview / Promo Visual */
+    .app-preview-wrapper {
+      margin-top: 50px;
+      width: 100%;
+      max-width: 360px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+
+    .preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .mock-chat-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--card-surface);
+      border-radius: 16px;
+      margin-top: 10px;
+      text-align: left;
+    }
+
+    /* Features Showcase */
+    .features-section {
+      padding: 60px 20px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section-heading {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .section-heading h2 {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .section-heading p {
+      color: var(--text-sub);
+      font-size: 15px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 24px;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: rgba(0, 168, 132, 0.15);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .feature-card h3 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: var(--text-sub);
+      line-height: 1.5;
+    }
+
+    /* Footer */
+    footer {
+      background: var(--card-bg);
+      border-top: 1px solid var(--border);
+      padding: 30px 20px;
+      text-align: center;
+      margin-top: auto;
+      font-size: 13px;
+      color: var(--text-sub);
+    }
+
+    @media (max-width: 600px) {
+      .hero-title {
+        font-size: 32px;
+      }
+      header {
+        padding: 12px 16px;
+      }
     }
   </style>
 </head>
 <body>
 
-  <!-- App Branding Section -->
-  <div class="brand-container">
-    <div class="logo-wrapper">
-      <i class="fa-solid fa-comments"></i>
+<!-- Navigation Header -->
+<header>
+  <a href="index.html" class="app-brand">
+    <i class="fa-solid fa-paper-plane"></i> MessApp
+  </a>
+
+  <div class="nav-actions">
+    <!-- Theme Control Option -->
+    <button class="theme-select-btn" onclick="cycleTheme()" id="themeBtn">
+      <i class="fa-solid fa-circle-half-stroke"></i> System
+    </button>
+
+    <!-- Dynamic Auth Buttons Container -->
+    <div id="authContainer">
+      <!-- Loaded dynamically by JS -->
+      <a href="login.html" class="btn btn-outline" style="font-size:12px; padding:6px 12px;">Wait...</a>
     </div>
-    <div class="app-title">MessApp</div>
-    <div class="app-tagline">Fast, Secure & Private Messaging</div>
+  </div>
+</header>
+
+<!-- Main Promo Hero Section -->
+<section class="hero-section">
+  <div class="hero-badge">
+    <i class="fa-solid fa-bolt"></i> Next-Gen Realtime Messaging
   </div>
 
-  <!-- Loading Animation & Footer Section -->
-  <div class="footer-container">
-    <div class="progress-bar-bg">
-      <div class="progress-bar-fill"></div>
-    </div>
-    <div class="security-tag">
-      <i class="fa-solid fa-shield-halved"></i> End-to-End Encrypted
-    </div>
-    <button class="skip-btn" onclick="redirectToHome()">Open MessApp</button>
+  <h1 class="hero-title">
+    जुड़ें अपनों के साथ, <span>MessApp</span> के तेज़ और सुरक्षित प्लेटफ़ॉर्म पर
+  </h1>
+
+  <p class="hero-subtitle">
+    बिना किसी रुकावट के बातें करें, शेयर करें और नए लोगों से मिलें। MessApp देता है आपको एक आधुनिक, स्मूथ और रिअल-टाइम मैसेंजर का बेहतरीन अनुभव।
+  </p>
+
+  <!-- Big Start Messenger Action Box -->
+  <div class="start-messenger-box">
+    <a href="home.html" class="btn-start-hero">
+      <i class="fa-solid fa-comments"></i> Start Messenger
+    </a>
   </div>
 
-  <script>
-    // System Theme Preference Listener (Keep UI consistent)
-    const savedTheme = localStorage.getItem('messapp_theme');
-    if (savedTheme) {
-      document.documentElement.setAttribute('data-theme', savedTheme);
+  <!-- Interactive Mock App Preview -->
+  <div class="app-preview-wrapper">
+    <div class="preview-header">
+      <span style="font-weight:800; font-size:14px; color:var(--accent);">MessApp Live</span>
+      <i class="fa-solid fa-ellipsis-vertical" style="color:var(--text-sub)"></i>
+    </div>
+    
+    <div class="mock-chat-item">
+      <div class="avatar-animated" style="width:36px; height:36px; font-size:14px;">M</div>
+      <div style="flex:1;">
+        <div style="font-weight:700; font-size:13px;">MessApp Official</div>
+        <div style="font-size:11px; color:var(--text-sub);">Welcome to the future of messaging! 🚀</div>
+      </div>
+      <span style="font-size:10px; color:var(--accent); font-weight:700;">ACTIVE</span>
+    </div>
+  </div>
+</section>
+
+<!-- Features Showcase -->
+<section class="features-section">
+  <div class="section-heading">
+    <h2>MessApp क्यों चुनें?</h2>
+    <p>वह सब कुछ जो एक परफेक्ट सोशल मैसेंजर ऐप में होना चाहिए</p>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon"><i class="fa-solid fa-bolt"></i></div>
+      <h3>रिअल-टाइम चैट</h3>
+      <p>Firebase द्वारा संचालित अति-तेज़ संदेश सेवा, जिससे आपका कोई संदेश कभी भी देरी से न पहुंचे।</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon"><i class="fa-solid fa-hand-swipe"></i></div>
+      <h3>स्वाइप एक्शन्स</h3>
+      <p>चैट्स को स्वाइप करके हाइड, आर्काइव, लाइक या शेयर करें। एक बेहद आधुनिक टच एक्सपीरियंस।</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon"><i class="fa-solid fa-bell"></i></div>
+      <h3>स्मार्ट नोटिफिकेशन्स</h3>
+      <p>OneSignal SDK एकीकरण के साथ नए मैसेज और अलर्ट्स तुरंत प्राप्त करें, भले ही आप ऐप से बाहर हों।</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon"><i class="fa-solid fa-moon"></i></div>
+      <h3>सिस्टम थीम सपोर्ट</h3>
+      <p>आपकी पसंद के अनुसार डार्क, लाइट या ऑटोमैटिक सिस्टम थीम के साथ आरामदायक इंटरफेस।</p>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <p>© 2026 MessApp Inc. सर्वाधिकार सुरक्षित | सुरक्षित एवं विश्वसनीय</p>
+</footer>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+<script>
+  // Firebase Configuration (Same as home.html)
+  const firebaseConfig = {
+    apiKey: "AIzaSyD68Gmuz3JmwC570rX4h0ShxMe2O8QYLug",
+    authDomain: "exemplary-proxy-423103-s4.firebaseapp.com",
+    databaseURL: "https://exemplary-proxy-423103-s4-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "exemplary-proxy-423103-s4",
+    storageBucket: "exemplary-proxy-423103-s4.firebasestorage.app",
+    messagingSenderId: "454413347434",
+    appId: "1:454413347434:web:d68e8ecf337a333418b813"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
+
+  // --- Theme Manager Engine ---
+  const themes = ['system', 'dark', 'light'];
+  let currentThemeIdx = 0;
+
+  function applyTheme(theme) {
+    if (theme === 'system') {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+      document.getElementById('themeBtn').innerHTML = `<i class="fa-solid fa-desktop"></i> System`;
     } else {
-      const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-      if (!prefersLight) {
-        document.documentElement.setAttribute('data-theme', 'dark');
-      }
+      document.documentElement.setAttribute('data-theme', theme);
+      document.getElementById('themeBtn').innerHTML = theme === 'light' 
+        ? `<i class="fa-solid fa-sun"></i> Light` 
+        : `<i class="fa-solid fa-moon"></i> Dark`;
     }
+  }
 
-    // Redirect Function
-    function redirectToHome() {
-      document.body.classList.add('fade-out');
-      setTimeout(() => {
-        window.location.replace('home.html');
-      }, 300); // Wait for smooth fade-out effect
+  function cycleTheme() {
+    currentThemeIdx = (currentThemeIdx + 1) % themes.length;
+    const selectedTheme = themes[currentThemeIdx];
+    localStorage.setItem('messapp_theme', selectedTheme);
+    applyTheme(selectedTheme);
+  }
+
+  function initTheme() {
+    const savedTheme = localStorage.getItem('messapp_theme') || 'system';
+    currentThemeIdx = themes.indexOf(savedTheme);
+    if (currentThemeIdx === -1) currentThemeIdx = 0;
+    applyTheme(savedTheme);
+  }
+
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (themes[currentThemeIdx] === 'system') applyTheme('system');
+  });
+
+  initTheme();
+
+  // --- Auth State Listener ---
+  auth.onAuthStateChanged(user => {
+    const authContainer = document.getElementById('authContainer');
+
+    if (user) {
+      // User is LOGGED IN -> Fetch Profile Info & Show Avatar
+      db.ref(`users/${user.uid}`).once('value').then(snapshot => {
+        const userData = snapshot.val() || {};
+        const fullName = userData.fullName || user.displayName || 'User';
+        const firstName = fullName.split(' ')[0];
+        const username = userData.username ? `@${userData.username}` : user.email;
+        const firstLetter = firstName.charAt(0).toUpperCase();
+
+        authContainer.innerHTML = `
+          <div class="user-profile-badge" onclick="window.location.href='account.html'" title="My Account">
+            <div class="avatar-animated" style="width:32px; height:32px; font-size:13px;">${firstLetter}</div>
+            <div class="user-profile-info">
+              <span class="u-name">${firstName}</span>
+              <span class="u-tag">${username.substring(0, 10)}...</span>
+            </div>
+          </div>
+        `;
+      }).catch(() => {
+        // Fallback if DB fetch fails
+        const firstLetter = (user.email || 'U').charAt(0).toUpperCase();
+        authContainer.innerHTML = `
+          <div class="user-profile-badge" onclick="window.location.href='account.html'">
+            <div class="avatar-animated" style="width:32px; height:32px; font-size:13px;">${firstLetter}</div>
+            <div class="user-profile-info">
+              <span class="u-name">Account</span>
+            </div>
+          </div>
+        `;
+      });
+
+    } else {
+      // User NOT LOGGED IN -> Show Login & Register Buttons
+      authContainer.innerHTML = `
+        <a href="login.html" class="btn btn-outline" style="padding: 7px 14px; font-size:13px;">लॉगिन</a>
+        <a href="register.html" class="btn btn-primary" style="padding: 7px 14px; font-size:13px;">रजिस्टर</a>
+      `;
     }
-
-    // Auto Redirect precisely after 3 Seconds (3000ms)
-    setTimeout(() => {
-      redirectToHome();
-    }, 3000);
-  </script>
-
+  });
+</script>
 </body>
 </html>
